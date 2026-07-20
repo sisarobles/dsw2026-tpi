@@ -21,7 +21,7 @@ namespace Dsw2026Tpi.Application.Services
 
         public Task DeleteAppointment(Guid idAppointment)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException();     
         }
 
         public Task<IEnumerable<AppointmentSummaryModel.Response>> GetAppointmentByDni(long dni)
