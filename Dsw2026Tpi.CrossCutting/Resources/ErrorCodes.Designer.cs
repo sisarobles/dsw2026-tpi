@@ -97,6 +97,24 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a El turno seleccionado no se encuentra disponible.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_AVAILABLE {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_AVAILABLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El turno no se encuentra reservado.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_BOOKED {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_BOOKED", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a No es posible cancelar el turno.
         /// </summary>
         public static string CANCEL_APPOINTMENT {

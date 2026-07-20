@@ -5,6 +5,7 @@ using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Data;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -19,6 +20,9 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<AppointmentModel.Response> CreateAppointment(AppointmentModel.Request request)
         {
+            if (string.IsNullOrWhiteSpace(request.Reason) || request.Reason.Length < 5)
+                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ValidationException)); //CHEQUEAR SI ESTÁ BIEN ESTO 
+
             // 1. Buscar el slot y validar que exista
             var slot = await _persistence.GetById<AvailabilitySlot>(request.AvailabilityId)
                        ?? throw new EntityNotFoundException(nameof(AvailabilitySlot));
@@ -43,7 +47,15 @@ namespace Dsw2026Tpi.Application.Services
 
             // 5. Crear la cita
             var appointment = new Appointment(patientId, slot.Id, request.Reason);
-            await _persistence.Add(appointment);
+            try
+            {
+                await _persistence.Add(appointment);
+                // await _persistence.Update(slot); (cuando esté el Book() de Meli)
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConflictException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+            }
 
             // TODO (pendiente Meli - AvailabilitySlot): falta un método público en AvailabilitySlot
             // para pasar el Status de AVAILABLE a BOOKED (algo como slot.Book()), porque el setter

@@ -129,6 +129,12 @@
   <data name="AUTHORIZATION_FAILED" xml:space="preserve">
     <value>Se requieren permisos para la operación solicitada</value>
   </data>
+  <data name="AVAILABILITY_SLOT_NOT_AVAILABLE" xml:space="preserve">
+    <value>El turno seleccionado no se encuentra disponible</value>
+  </data>
+  <data name="AVAILABILITY_SLOT_NOT_BOOKED" xml:space="preserve">
+    <value>El turno no se encuentra reservado</value>
+  </data>
   <data name="CANCEL_APPOINTMENT" xml:space="preserve">
     <value>No es posible cancelar el turno</value>
   </data>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 
 namespace Dsw2026Tpi.Domain.Entities
 {
@@ -37,7 +38,7 @@ namespace Dsw2026Tpi.Domain.Entities
         public void Book()
         {
             if (Status != SlotStatus.AVAILABLE)
-                throw new ConflictException("SLOT_NOT_BOOKED", "El turno no está disponible");
+                throw new ConflictException(ErrorCodes.AVAILABILITY_SLOT_NOT_AVAILABLE, nameof(ErrorCodes.AVAILABILITY_SLOT_NOT_AVAILABLE));
             Status = SlotStatus.BOOKED;
         }
 
@@ -45,7 +46,7 @@ namespace Dsw2026Tpi.Domain.Entities
         public void Release()
         {
             if (Status != SlotStatus.BOOKED)
-                throw new ConflictException("SLOT_NOT_BOOKED", "El turno no está reservado");
+                throw new ConflictException(ErrorCodes.AVAILABILITY_SLOT_NOT_BOOKED, nameof(ErrorCodes.AVAILABILITY_SLOT_NOT_BOOKED));
             Status = SlotStatus.AVAILABLE;
         }
     }
