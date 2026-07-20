@@ -21,50 +21,37 @@ namespace Dsw2026Tpi.Application.Services
         public async Task<AppointmentModel.Response> CreateAppointment(AppointmentModel.Request request)
         {
             if (string.IsNullOrWhiteSpace(request.Reason) || request.Reason.Length < 5)
-                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ValidationException)); //CHEQUEAR SI ESTÁ BIEN ESTO 
+                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
 
-            // 1. Buscar el slot y validar que exista
-            var slot = await _persistence.GetById<AvailabilitySlot>(request.AvailabilityId)
+            var slot = await _persistence.GetById<AvailabilitySlot>(request.AvailabilityId, nameof(AvailabilitySlot.AvailabilityRule))
                        ?? throw new EntityNotFoundException(nameof(AvailabilitySlot));
 
-            // 2. Validar que el slot pertenezca al doctor indicado (RN01, coherencia del request)
             if (slot.AvailabilityRule.DoctorId != request.DoctorId)
                 throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
 
-            // 3. Validar que esté disponible (RN03)
             if (slot.Status != SlotStatus.AVAILABLE)
                 throw new ConflictException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
 
-            // 4. Validar que no sea una fecha/hora pasada (RN04)
             if (slot.SlotDate < DateOnly.FromDateTime(DateTime.UtcNow))
                 throw new BusinessRuleException(ErrorCodes.APPOINTMENT_PAST_DATE, nameof(ErrorCodes.APPOINTMENT_PAST_DATE));
 
-            // TODO (pendiente Jaz - Patient): buscar/crear el paciente por DNI.
-            // Por ahora, placeholder para que compile:
-            // var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni.ToString())
-            //               ?? throw new EntityNotFoundException(nameof(Patient));
-            var patientId = Guid.Empty; // reemplazar por patient.Id cuando esté Patient
+            //FALTA (pendiente: Patient): buscar/crear el paciente por DNI
+            var patientId = Guid.Empty; //reemplazar por patient.Id cuando esté Patient
 
-            // 5. Crear la cita
-            var appointment = new Appointment(patientId, slot.Id, request.Reason);
             try
             {
+                slot.Book();
+                await _persistence.Update(slot);
+
+                var appointment = new Appointment(patientId, slot.Id, request.Reason);
                 await _persistence.Add(appointment);
-                // await _persistence.Update(slot); (cuando esté el Book() de Meli)
+
+                return new AppointmentModel.Response(appointment.Id, appointment.Estado.ToString());
             }
             catch (DbUpdateConcurrencyException)
             {
                 throw new ConflictException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
             }
-
-            // TODO (pendiente Meli - AvailabilitySlot): falta un método público en AvailabilitySlot
-            // para pasar el Status de AVAILABLE a BOOKED (algo como slot.Book()), porque el setter
-            // es privado y no hay ningún método que lo cambie todavía. Pedirle que lo agregue.
-            // Una vez que exista:
-            // slot.Book();
-            // await _persistence.Update(slot);
-
-            return new AppointmentModel.Response(appointment.Id, appointment.Estado.ToString());
         }
 
         public async Task DeleteAppointment(Guid idAppointment)
