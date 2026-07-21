@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Dsw2026Tpi.Application.Dtos.Specialities
 {
-    internal class UpdateSpecialityDto
+    public class UpdateSpecialityDto
     {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
     }
 }

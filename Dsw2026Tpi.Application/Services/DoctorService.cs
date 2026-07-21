@@ -26,8 +26,8 @@ public class DoctorService : IDoctorService
 
     public async Task<DoctorResponseDto> CreateAsync(CreateDoctorDto dto)
     {
-        // 1. Mapeo de entrada: Como no hay private, usamos las llaves { }
-        var doctor = new Doctor(dto.Name, dto.LicenseNumber, dto.SpecialityId ?? Guid.Empty);
+        // 1. Mapeo de entrada
+        var doctor = new Doctor(dto.Name, dto.LicenseNumber, dto.SpecialityId );
 
         // 2. Guardamos en la base de datos
         await _persistence.Add(doctor);

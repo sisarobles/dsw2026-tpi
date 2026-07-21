@@ -4,7 +4,10 @@ using System.Text;
 
 namespace Dsw2026Tpi.Application.Dtos.Specialities
 {
-    internal class SpecialityResponseDto
+    public class SpecialityResponseDto
     {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
     }
 }
