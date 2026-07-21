@@ -1,6 +1,7 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using System;
@@ -32,12 +33,18 @@ namespace Dsw2026Tpi.Application.Services
             int month = CurrentDate.Month;
             int year = CurrentDate.Year;
 
+            var today = DateOnly.FromDateTime(DateTime.Now);
+
             // Cuento la cantidad de días del mes
             var daysInMonth = DateTime.DaysInMonth(year, month);
 
             //Recorro cada día configurado por el administrador
             foreach (var dayRequest in request.Days)  
             {
+                //Validar de que StartTime<EndTime
+                if (dayRequest.StartTime >= dayRequest.EndTime)
+                    throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
+               
                 var rule = new AvailabilityRule(
                     request.DoctorId,
                     month,
@@ -48,17 +55,12 @@ namespace Dsw2026Tpi.Application.Services
                 );
                 await _persistence.Add(rule);
 
-                //Valido de que StartTime<EndTime
-                if (dayRequest.StartTime >= dayRequest.EndTime)
-                    throw new ValidationException("El horario de inicio debe ser menor al de fin",
-                        "VALIDATION_ERROR");
-
                 // buscar qué fechas del mes tienen ese día de la semana
                 for (int day = 1; day <= daysInMonth; day++)
                 {
                     var date = new DateOnly(year, month, day);
 
-                    if (date.DayOfWeek == dayRequest.Day)
+                    if (date.DayOfWeek == dayRequest.Day && date >= today)
                     {
                         //Genero slots cada 30min
                         var StartTime = dayRequest.StartTime;
@@ -75,10 +77,9 @@ namespace Dsw2026Tpi.Application.Services
                 }
             }
 
-
         }
 
-        public Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId)
+        public Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId) 
         {
             throw new NotImplementedException();
         }
@@ -95,6 +96,7 @@ namespace Dsw2026Tpi.Application.Services
 
             int month = CurrentDate.Month;
             int year = CurrentDate.Year;
+            var today = DateOnly.FromDateTime(DateTime.Now);
 
             // Cuento la cantidad de días del mes
             var daysInMonth = DateTime.DaysInMonth(year, month);
@@ -114,14 +116,20 @@ namespace Dsw2026Tpi.Application.Services
                 
                 foreach (var slot in slotsExistentes)
                 {
-                    await _persistence.Delete(slot);
+                    if(slot.Status == SlotStatus.AVAILABLE)
+                      await _persistence.Delete(slot);
                 }
 
                 await _persistence.Delete(regla);
             }
+
             //Recorro cada día configurado por el administrador
             foreach (var dayRequest in request.Days)
             {
+                //Valido de que StartTime<EndTime
+                if (dayRequest.StartTime >= dayRequest.EndTime)
+                    throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
+
                 var rule = new AvailabilityRule(
                     request.DoctorId,
                     month,
@@ -132,17 +140,12 @@ namespace Dsw2026Tpi.Application.Services
                 );
                 await _persistence.Add(rule);
 
-                //Valido de que StartTime<EndTime
-                if (dayRequest.StartTime >= dayRequest.EndTime)
-                    throw new ValidationException("El horario de inicio debe ser menor al de fin",
-                        "VALIDATION_ERROR");
-
                 // buscar qué fechas del mes tienen ese día de la semana
                 for (int day = 1; day <= daysInMonth; day++)
                 {
                     var date = new DateOnly(year, month, day);
 
-                    if (date.DayOfWeek == dayRequest.Day)
+                    if (date.DayOfWeek == dayRequest.Day && date >= today)
                     {
                         //Genero slots cada 30min
                         var StartTime = dayRequest.StartTime;
