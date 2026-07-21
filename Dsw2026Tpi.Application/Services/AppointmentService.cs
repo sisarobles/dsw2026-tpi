@@ -32,7 +32,7 @@ namespace Dsw2026Tpi.Application.Services
             if (slot.Status != SlotStatus.AVAILABLE)
                 throw new ConflictException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
 
-            if (slot.SlotDate < DateOnly.FromDateTime(DateTime.UtcNow))
+            if (slot.SlotDate < DateOnly.FromDateTime(DateTime.Now)) //UtcNow
                 throw new BusinessRuleException(ErrorCodes.APPOINTMENT_PAST_DATE, nameof(ErrorCodes.APPOINTMENT_PAST_DATE));
 
             //FALTA (pendiente: Patient): buscar/crear el paciente por DNI
