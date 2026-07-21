@@ -9,5 +9,14 @@ public class SpecialityConfiguration : IEntityTypeConfiguration<Speciality>
     public void Configure(EntityTypeBuilder<Speciality> builder)
     {
         builder.ToTable("Specialities");
+
+        builder.Property(s => s.Name)
+               .IsRequired()             
+               .HasMaxLength(100);       
+
+        // 3. Validaciones para la Descripción
+        builder.Property(s => s.Description)
+               .IsRequired(false)      
+               .HasMaxLength(500);
     }
 }
