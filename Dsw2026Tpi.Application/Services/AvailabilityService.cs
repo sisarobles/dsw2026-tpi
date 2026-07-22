@@ -7,7 +7,6 @@ using Dsw2026Tpi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using static Dsw2026Tpi.Application.Dtos.AvailabilityModel;
 
 namespace Dsw2026Tpi.Application.Services
 {
