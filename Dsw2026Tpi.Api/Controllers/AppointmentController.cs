@@ -10,7 +10,7 @@ namespace Dsw2026Tpi.Api.Controllers
 {
     [Route("api/appointments")]
     [ApiController]
-    public class AppointmentController : ControllerBase
+    public class AppointmentController : AppController
     {
         private readonly IAppointmentService _service;
         public AppointmentController(IAppointmentService service)

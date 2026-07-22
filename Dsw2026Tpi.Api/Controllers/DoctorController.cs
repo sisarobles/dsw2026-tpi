@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Application.Interfaces;
+﻿using Dsw2026Tpi.Application.Dtos.Doctors;
+using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,5 +23,26 @@ public class DoctorController : AppController
     {
         var doctors = await _service.GetAll(pageSize, pageIndex, name);
         return Ok(doctors);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateDoctorDto dto)
+    {
+        var result = await _service.CreateAsync(dto);
+        return Ok(result);
+    }
+
+    // Petición DELETE: Recibe un ID en la URL 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Deactivate(Guid id)
+    {
+        var success = await _service.DeactivateAsync(id);
+
+        if (!success)
+        {
+            return NotFound(); // Error 404 si el médico no existe
+        }
+
+        return NoContent(); // Código 204: Todo salió bien y no hay datos que devolver
     }
 }

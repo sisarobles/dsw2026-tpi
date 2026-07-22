@@ -149,11 +149,13 @@ namespace Dsw2026Tpi.Data.Migrations
 
                     b.Property<string>("LicenseNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("SpecialityId")
                         .HasColumnType("uniqueidentifier");
@@ -178,12 +180,13 @@ namespace Dsw2026Tpi.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -216,18 +219,19 @@ namespace Dsw2026Tpi.Data.Migrations
                 });
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.Doctor", b =>
-                {
-                    b.HasOne("Dsw2026Tpi.Domain.Entities.Speciality", "Speciality")
-                        .WithMany()
-                        .HasForeignKey("SpecialityId");
+            {
+                b.HasOne("Dsw2026Tpi.Domain.Entities.Speciality", "Speciality")
+                    .WithMany()
+                    .HasForeignKey("SpecialityId")
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Speciality");
-                });
+                b.Navigation("Speciality");
+            });
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.AvailabilityRule", b =>
-                {
-                    b.Navigation("Slots");
-                });
+            {
+                b.Navigation("Slots");
+            });
 #pragma warning restore 612, 618
         }
     }
