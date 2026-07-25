@@ -19,6 +19,6 @@ namespace Dsw2026Tpi.CrossCutting.Logging
     {
         Info,
         Warning,
-        Error
+        Error 
     }
 }
