@@ -117,11 +117,20 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="APPOINTMENT_CONFLICT" xml:space="preserve">
+    <value>El turno seleccionado ya no se encuentra disponible</value>
+  </data>
+  <data name="APPOINTMENT_PAST_DATE" xml:space="preserve">
+    <value>No se pueden reservar turnos en fechas u horarios pasados</value>
+  </data>
   <data name="AUTHENTICATION_FAILED" xml:space="preserve">
     <value>Usuario o contraseña incorrectos</value>
   </data>
   <data name="AUTHORIZATION_FAILED" xml:space="preserve">
     <value>Se requieren permisos para la operación solicitada</value>
+  </data>
+  <data name="CANCEL_APPOINTMENT" xml:space="preserve">
+    <value>No es posible cancelar el turno</value>
   </data>
   <data name="ENTITY_NOTFOUND" xml:space="preserve">
     <value>La entidad {0} no se encontró</value>
@@ -140,5 +149,14 @@
   </data>
   <data name="VALIDATION_ERROR" xml:space="preserve">
     <value>Uno o más errores de validación ocurrieron</value>
+  </data>
+  <data name="AVAILABILITY_SLOT_NOT_AVAILABLE" xml:space="preserve">
+    <value>El turno seleccionado no se encuentra disponible</value>
+  </data>
+  <data name="AVAILABILITY_SLOT_NOT_BOOKED" xml:space="preserve">
+    <value>El turno no se encuentra reservado</value>
+  </data>
+  <data name="PATIENT_INVALID_DNI" xml:space="preserve">
+    <value>El dni ingresado no está registrado o es inválido</value>
   </data>
 </root>

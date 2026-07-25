@@ -61,6 +61,27 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         }
         
         /// <summary>
+<<<<<<< HEAD
+=======
+        ///   Busca una cadena traducida similar a El turno seleccionado ya no se encuentra disponible.
+        /// </summary>
+        public static string APPOINTMENT_CONFLICT {
+            get {
+                return ResourceManager.GetString("APPOINTMENT_CONFLICT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a No se pueden reservar turnos en fechas u horarios pasados.
+        /// </summary>
+        public static string APPOINTMENT_PAST_DATE {
+            get {
+                return ResourceManager.GetString("APPOINTMENT_PAST_DATE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+>>>>>>> development
         ///   Busca una cadena traducida similar a Usuario o contraseña incorrectos.
         /// </summary>
         public static string AUTHENTICATION_FAILED {
@@ -79,6 +100,36 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         }
         
         /// <summary>
+<<<<<<< HEAD
+=======
+        ///   Busca una cadena traducida similar a El turno seleccionado no se encuentra disponible.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_AVAILABLE {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_AVAILABLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El turno no se encuentra reservado.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_BOOKED {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_BOOKED", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a No es posible cancelar el turno.
+        /// </summary>
+        public static string CANCEL_APPOINTMENT {
+            get {
+                return ResourceManager.GetString("CANCEL_APPOINTMENT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+>>>>>>> development
         ///   Busca una cadena traducida similar a La entidad {0} no se encontró.
         /// </summary>
         public static string ENTITY_NOTFOUND {
@@ -88,7 +139,11 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         }
         
         /// <summary>
+<<<<<<< HEAD
         ///   Busca una cadena traducida similar a DNI inválido, debe tener entre 7 y 8 dígitos.
+=======
+        ///   Busca una cadena traducida similar a El dni ingresado no está registrado o es inválido.
+>>>>>>> development
         /// </summary>
         public static string PATIENT_INVALID_DNI {
             get {
