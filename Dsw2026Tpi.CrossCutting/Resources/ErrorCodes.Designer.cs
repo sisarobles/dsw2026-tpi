@@ -97,6 +97,24 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a El turno seleccionado no se encuentra disponible.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_AVAILABLE {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_AVAILABLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El turno no se encuentra reservado.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_BOOKED {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_BOOKED", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a No es posible cancelar el turno.
         /// </summary>
         public static string CANCEL_APPOINTMENT {
@@ -111,6 +129,15 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         public static string ENTITY_NOTFOUND {
             get {
                 return ResourceManager.GetString("ENTITY_NOTFOUND", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El dni ingresado no está registrado o es inválido.
+        /// </summary>
+        public static string PATIENT_INVALID_DNI {
+            get {
+                return ResourceManager.GetString("PATIENT_INVALID_DNI", resourceCulture);
             }
         }
         
