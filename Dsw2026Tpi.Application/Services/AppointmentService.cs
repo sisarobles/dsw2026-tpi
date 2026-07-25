@@ -35,8 +35,9 @@ namespace Dsw2026Tpi.Application.Services
             if (slot.SlotDate < DateOnly.FromDateTime(DateTime.Now)) //UtcNow
                 throw new BusinessRuleException(ErrorCodes.APPOINTMENT_PAST_DATE, nameof(ErrorCodes.APPOINTMENT_PAST_DATE));
 
-            //FALTA (pendiente: Patient): buscar/crear el paciente por DNI
-            var patientId = Guid.Empty; //reemplazar por patient.Id cuando esté Patient
+            var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni)
+                ?? throw new EntityNotFoundException(nameof(Patient));
+            var patientId = patient.Id; 
 
             try
             {
@@ -61,9 +62,17 @@ namespace Dsw2026Tpi.Application.Services
             await _persistence.Update<Appointment>(appointment);
         }
 
-        public Task<IEnumerable<AppointmentSummaryModel.Response>> GetAppointmentByDni(long dni)
+        public async Task<IEnumerable<AppointmentSummaryModel.Response>> GetAppointmentByDni(long dni)
         {
-            throw new NotImplementedException();
+            var patient = await _persistence.First<Patient>(p => p.Dni == dni)
+                ?? throw new EntityNotFoundException(nameof(Patient));
+            var appointments = await _persistence.GetFiltered<Appointment>(a => 
+                (a.PatientId == patient.Id) && 
+                (a.Estado == Estado.BOOKED));
+            return appointments.Select(a => new AppointmentSummaryModel.Response(
+                a.Id, 
+                a.Estado.ToString(), 
+                a.Reason));
         }
 
         public async Task<Pagination<AppointmentSearchModel.Response>> GetAppointmentBySearch(AppointmentSearchModel.Request request, int pageSize, int pageIndex)
