@@ -66,8 +66,8 @@ namespace Dsw2026Tpi.Application.Services
         {
             var patient = await _persistence.First<Patient>(p => p.Dni == dni)
                 ?? throw new EntityNotFoundException(nameof(Patient));
-            var appointments = await _persistence.GetFiltered<Appointment>(a => 
-                (a.PatientId == patient.Id) && 
+            var appointments = await _persistence.GetFiltered<Appointment>(a =>
+                (a.PatientId == patient.Id) &&
                 (a.Estado == Estado.BOOKED));
             return appointments.Select(a => new AppointmentSummaryModel.Response(
                 a.Id, 
