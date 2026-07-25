@@ -59,7 +59,10 @@ namespace Dsw2026Tpi.Application.Services
         {
             var appointment = await _persistence.GetById<Appointment>(idAppointment) ?? throw new EntityNotFoundException(nameof(Appointment));
             appointment.Cancel();
+            appointment.AvailabilitySlot!.Release();
+
             await _persistence.Update<Appointment>(appointment);
+            await _persistence.Update<AvailabilitySlot>(appointment.AvailabilitySlot);
         }
 
         public async Task<IEnumerable<AppointmentSummaryModel.Response>> GetAppointmentByDni(long dni)

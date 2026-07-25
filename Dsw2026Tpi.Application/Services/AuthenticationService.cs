@@ -80,7 +80,7 @@ public class AuthenticationService : IAuthenticationService
             var createResult = await _userManager.CreateAsync(user);
 
             if (!createResult.Succeeded)
-                throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT), ErrorCodes.REGISTER_USER_CONFLICT)
+                throw new ConflictException(ErrorCodes.REGISTER_USER_CONFLICT, nameof(ErrorCodes.REGISTER_USER_CONFLICT))
                     .WithDetail(createResult.Errors.Select(e => (e.Code, e.Description)));
 
             _ = await _userManager.AddToRoleAsync(user, Roles.Patient);
@@ -120,8 +120,7 @@ public class AuthenticationService : IAuthenticationService
 
         var result = await _userManager.CreateAsync(user, request.Password);
 
-        if (!result.Succeeded) throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT),
-            ErrorCodes.REGISTER_USER_CONFLICT)
+        if (!result.Succeeded) throw new ConflictException(ErrorCodes.REGISTER_USER_CONFLICT, nameof(ErrorCodes.REGISTER_USER_CONFLICT))
                 .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
        
         _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);

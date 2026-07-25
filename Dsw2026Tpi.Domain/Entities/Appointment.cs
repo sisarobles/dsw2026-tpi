@@ -20,6 +20,7 @@ namespace Dsw2026Tpi.Domain.Entities
         public byte[] RowVersion { get; private set; }
         public Guid PatientId { get; private set; }
         public Guid AvailabilitySlotId { get; private set; }
+        public AvailabilitySlot? AvailabilitySlot { get; private set; }
 
         //constructor para EF
         private Appointment() { }
