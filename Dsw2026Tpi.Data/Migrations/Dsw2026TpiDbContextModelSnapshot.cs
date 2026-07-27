@@ -55,8 +55,6 @@ namespace Dsw2026Tpi.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AvailabilitySlotId");
-
                     b.ToTable("Appointments", (string)null);
                 });
 
@@ -232,17 +230,6 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Specialities", (string)null);
-                });
-
-            modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.Appointment", b =>
-                {
-                    b.HasOne("Dsw2026Tpi.Domain.Entities.AvailabilitySlot", "AvailabilitySlot")
-                        .WithMany()
-                        .HasForeignKey("AvailabilitySlotId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AvailabilitySlot");
                 });
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.AvailabilityRule", b =>
