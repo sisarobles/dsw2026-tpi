@@ -125,6 +125,24 @@ namespace Dsw2026Tpi.CrossCutting.Resources
         }
 
         /// <summary>
+        ///   Busca una cadena traducida similar a No se puede modificar la disponibilidad porque hay turnos reservados.
+        /// </summary>
+        public static string AVAILABILITY_BOOKED_SLOTS {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_BOOKED_SLOTS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Los horarios se solapan con una disponibilidad existente .
+        /// </summary>
+        public static string AVAILABILITY_OVERLAP {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_OVERLAP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a No es posible cancelar el turno.
         /// </summary>
         public static string CANCEL_APPOINTMENT
