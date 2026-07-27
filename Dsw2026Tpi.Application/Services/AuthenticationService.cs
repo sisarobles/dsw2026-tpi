@@ -63,7 +63,7 @@ public class AuthenticationService : IAuthenticationService
         if (!request.Email.IsEmailValid()) throw new AuthenticationException();
 
         if (request.Dni < 1_000_000 || request.Dni > 99_999_999)
-            throw new ValidationException(nameof(ErrorCodes.PATIENT_INVALID_DNI), ErrorCodes.PATIENT_INVALID_DNI);
+            throw new ValidationException(ErrorCodes.PATIENT_INVALID_DNI, nameof(ErrorCodes.PATIENT_INVALID_DNI));
 
         var user = await _userManager.FindByEmailAsync(request.Email);
 
