@@ -1,5 +1,7 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using System;
@@ -20,16 +22,16 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<SpecialityModel.Response> CreateAsync(SpecialityModel.Request request)
         {
-            // 1. Validaciones 
-            
-            
-            // 2. Mapeo de entrada: Convertimos el DTO en la entidad real de la base de datos
+            if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length < 3 || request.Name.Length > 100)
+                throw new ValidationException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+
+            if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length < 10 || request.Description.Length > 100)
+                throw new ValidationException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+
             var speciality = new Speciality(request.Name, request.Description ?? string.Empty);
 
-            // 3. Guardamos usando el repositorio genérico
             await _persistence.Add(speciality); 
 
-            // 4. Mapeo de salida: Devolvemos la respuesta segura
             return new SpecialityModel.Response
             (
                speciality.Id,
