@@ -10,17 +10,14 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
     {
         builder.ToTable("Doctors");
 
-        // 2. Validaciones para el Nombre
         builder.Property(d => d.Name)
                .IsRequired()             
                .HasMaxLength(100);      
 
-        // 3. Validaciones para la Matrícula (LicenseNumber)
         builder.Property(d => d.LicenseNumber)
                .IsRequired()
                .HasMaxLength(50);        
 
-        // 4. Configura la Relación (Foreign Key)
         builder.HasOne(d => d.Speciality)
                .WithMany()
                .HasForeignKey(d => d.SpecialityId)
