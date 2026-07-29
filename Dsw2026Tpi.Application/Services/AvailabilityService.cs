@@ -15,17 +15,20 @@ namespace Dsw2026Tpi.Application.Services
     public class AvailabilityService : IAvailabilityService
     {
         private readonly IPersistence _persistence;
+        private readonly IFeriadoService _feriadoService;
 
-        public AvailabilityService(IPersistence persistence)
+        public AvailabilityService(IPersistence persistence, IFeriadoService feriadoService)
         {
             _persistence = persistence;
+            _feriadoService = feriadoService;
+
         }
         public async Task CreateAvailability(AvailabilityModel.Request request)
         {
             //Verifico la existencia del doctor
             var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
             if (doctor == null)
-                throw new EntityNotFoundException("Doctor");
+                throw new EntityNotFoundException(nameof(Doctor));
 
             //Obtengo fecha actual
             var now = DateTime.UtcNow;
@@ -75,7 +78,7 @@ namespace Dsw2026Tpi.Application.Services
                     dayRequest.Day, dayRequest.StartTime, dayRequest.EndTime);
                 await _persistence.Add(rule);
 
-                var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year);
+                var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year, _feriadoService);
                 foreach (var slot in slots)
                     await _persistence.Add(slot);
             }

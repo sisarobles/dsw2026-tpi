@@ -1,5 +1,6 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Domain.Entities;
+using Dsw2026Tpi.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,7 +15,7 @@ namespace Dsw2026Tpi.Application.Extensions
             DateOnly today,
             int daysInMonth,
             int month,
-            int year)
+            int year, IFeriadoService feriadoService)
         {
             var slots = new List<AvailabilitySlot>();
 
@@ -22,7 +23,7 @@ namespace Dsw2026Tpi.Application.Extensions
             {
                 var date = new DateOnly(year, month, day);
 
-                if (date.DayOfWeek == dayRequest.Day && date >= today)
+                if (date.DayOfWeek == dayRequest.Day && date >= today && !feriadoService.EsFeriado(date))
                 {
                     var current = dayRequest.StartTime;
 

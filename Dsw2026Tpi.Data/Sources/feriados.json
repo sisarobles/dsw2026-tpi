@@ -1,0 +1,112 @@
+[
+  {
+    "fecha": "2026-01-01",
+    "nombre": "Año Nuevo",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-02-16",
+    "nombre": "Carnaval",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-02-17",
+    "nombre": "Carnaval",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-03-23",
+    "nombre": "Día no laborable con fines turísticos",
+    "tipo": "no_laborable"
+  },
+  {
+    "fecha": "2026-03-24",
+    "nombre": "Día Nacional de la Memoria por la Verdad y la Justicia",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-04-02",
+    "nombre": "Día del Veterano y de los Caídos en la Guerra de Malvinas",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-04-03",
+    "nombre": "Viernes Santo",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-05-01",
+    "nombre": "Día del Trabajador",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-05-25",
+    "nombre": "Día de la Revolución de Mayo",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-06-15",
+    "nombre": "Paso a la Inmortalidad del Gral. Güemes (trasladado del 17/06)",
+    "tipo": "trasladable"
+  },
+  {
+    "fecha": "2026-06-20",
+    "nombre": "Paso a la Inmortalidad del Gral. Belgrano",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-07-09",
+    "nombre": "Día de la Independencia",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-07-10",
+    "nombre": "Día no laborable con fines turísticos",
+    "tipo": "no_laborable"
+  },
+  {
+    "fecha": "2026-08-17",
+    "nombre": "Paso a la Inmortalidad del Gral. San Martín",
+    "tipo": "trasladable"
+  },
+  {
+    "fecha": "2026-09-12",
+    "nombre": "Año Nuevo Judío (Rosh Hashaná)",
+    "tipo": "no_laborable"
+  },
+  {
+    "fecha": "2026-09-13",
+    "nombre": "Año Nuevo Judío (Rosh Hashaná)",
+    "tipo": "no_laborable"
+  },
+  {
+    "fecha": "2026-09-21",
+    "nombre": "Día del Perdón (Iom Kipur)",
+    "tipo": "no_laborable"
+  },
+  {
+    "fecha": "2026-10-12",
+    "nombre": "Día del Respeto a la Diversidad Cultural",
+    "tipo": "trasladable"
+  },
+  {
+    "fecha": "2026-11-23",
+    "nombre": "Día de la Soberanía Nacional (trasladado del 20/11)",
+    "tipo": "trasladable"
+  },
+  {
+    "fecha": "2026-12-07",
+    "nombre": "Día no laborable con fines turísticos",
+    "tipo": "no_laborable"
+  },
+  {
+    "fecha": "2026-12-08",
+    "nombre": "Inmaculada Concepción de María",
+    "tipo": "inamovible"
+  },
+  {
+    "fecha": "2026-12-25",
+    "nombre": "Navidad",
+    "tipo": "inamovible"
+  }
+]
