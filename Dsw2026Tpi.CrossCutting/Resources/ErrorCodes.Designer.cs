@@ -97,24 +97,6 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         }
         
         /// <summary>
-        ///   Busca una cadena traducida similar a El turno seleccionado no se encuentra disponible.
-        /// </summary>
-        public static string AVAILABILITY_SLOT_NOT_AVAILABLE {
-            get {
-                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_AVAILABLE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Busca una cadena traducida similar a El turno no se encuentra reservado.
-        /// </summary>
-        public static string AVAILABILITY_SLOT_NOT_BOOKED {
-            get {
-                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_BOOKED", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Busca una cadena traducida similar a No se puede modificar la disponibilidad porque hay turnos reservados.
         /// </summary>
         public static string AVAILABILITY_BOOKED_SLOTS {
@@ -129,6 +111,24 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         public static string AVAILABILITY_OVERLAP {
             get {
                 return ResourceManager.GetString("AVAILABILITY_OVERLAP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El turno seleccionado no se encuentra disponible.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_AVAILABLE {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_AVAILABLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El turno no se encuentra reservado.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_BOOKED {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_BOOKED", resourceCulture);
             }
         }
         
@@ -174,6 +174,15 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         public static string REGISTER_USER_INVALID {
             get {
                 return ResourceManager.GetString("REGISTER_USER_INVALID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Se ha excedido el límite de solicitudes permitidas.
+        /// </summary>
+        public static string TOO_MANY_REQUESTS {
+            get {
+                return ResourceManager.GetString("TOO_MANY_REQUESTS", resourceCulture);
             }
         }
         

@@ -89,10 +89,11 @@ public static class SecurityConfigurationExtensions
         {
             options.Password = new PasswordOptions
             {
-                RequiredLength = 6,
-                RequireLowercase = true,
-                RequireUppercase = true,
-                RequireDigit = true
+                RequiredLength = 8,
+                RequireLowercase = false,
+                RequireUppercase = false,
+                RequireDigit = false,
+                RequireNonAlphanumeric = false
             };
 
         }).AddRoles<IdentityRole>()

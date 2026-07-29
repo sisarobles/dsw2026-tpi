@@ -5,9 +5,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Dsw2026Tpi.CrossCutting.Logging;
 
-/// <summary>
-/// Implementación de <see cref="ILogService"/> basada en el logging nativo de .NET.
-/// </summary>
 public class LogService : ILogService
 {
     private readonly ILogger<LogService> _logger;

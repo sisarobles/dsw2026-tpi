@@ -39,6 +39,8 @@ public class ExceptionHandlingMiddleware
         {
             ValidationException => HttpStatusCode.BadRequest,
             EntityNotFoundException => HttpStatusCode.NotFound,
+            // consultar al profe si AuthenticationException debería devolver 401 (Unauthorized) 
+            // en vez de 409 (Conflict), que es el estándar HTTP para credenciales inválidas
             ConflictException or AuthenticationException => HttpStatusCode.Conflict,
             AuthorizationException => HttpStatusCode.Unauthorized,
             _ => HttpStatusCode.InternalServerError,
