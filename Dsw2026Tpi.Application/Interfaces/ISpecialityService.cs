@@ -10,7 +10,9 @@ namespace Dsw2026Tpi.Application.Interfaces
     {
         Task<IEnumerable<SpecialityResponseDto>> GetAllAsync();
 
-        
         Task<SpecialityResponseDto> CreateAsync(CreateSpecialityDto dto);
+
+        Task<bool> DeactivateAsync(Guid id);
+        
     }
 }

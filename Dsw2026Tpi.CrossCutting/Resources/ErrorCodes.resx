@@ -129,6 +129,12 @@
   <data name="AUTHORIZATION_FAILED" xml:space="preserve">
     <value>Se requieren permisos para la operación solicitada</value>
   </data>
+  <data name="AVAILABILITY_BOOKED_SLOTS" xml:space="preserve">
+    <value>No se puede modificar la disponibilidad porque hay turnos reservados</value>
+  </data>
+  <data name="AVAILABILITY_OVERLAP" xml:space="preserve">
+    <value>Los horarios se solapan con una disponibilidad existente </value>
+  </data>
   <data name="CANCEL_APPOINTMENT" xml:space="preserve">
     <value>No es posible cancelar el turno</value>
   </data>
