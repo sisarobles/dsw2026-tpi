@@ -84,7 +84,7 @@ public class Program
                     }
                 }
             }
-            // --- Fin seed ---
+          
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();
 
@@ -98,20 +98,17 @@ public class Program
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger(); //permite el uso del swagger
-                app.UseSwaggerUI(); //uso de la interfaz de swagger
+                app.UseSwaggerUI(); 
             }
 
 
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.UseRateLimiter();
-            app.UseCors();
-            
 
+            app.UseCors();
             app.UseAuthentication(); //lee el header de autorización (Bearer <token>) y arma el usuario con los claims que tengamos definidos
-            app.UseAuthorization(); //chequear su el usuario tiene permiso para acceder a la ruta que solicita el request
-            app.UseCors(); //verifica el origen del request
-            app.UseMiddleware<ExceptionHandlingMiddleware>(); //envuelve todo lo siguiente en un try/catch para detectar errores especificamente en este caso
+            app.UseAuthorization();
+            app.UseRateLimiter(); 
+          
+
 
 
             app.MapControllers(); //permite que se ingrese a buscar qué controlador o método atiende la ruta solicitada
