@@ -3,6 +3,7 @@ using Dsw2026Tpi.Application.Dtos.Doctors;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
+using Dsw2026Tpi.CrossCutting.Exceptions;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -32,7 +33,7 @@ public class DoctorService : IDoctorService
             var speciality = await _persistence.GetByIdAsync<Speciality>(dto.SpecialityId.Value);
             if (speciality == null)
             {
-                throw new Exception("La especialidad ingresada no existe."); 
+                throw new EntityNotFoundException(nameof(Doctor)); 
             }
         }
 

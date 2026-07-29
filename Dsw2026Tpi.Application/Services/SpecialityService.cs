@@ -1,5 +1,7 @@
 ﻿using Dsw2026Tpi.Application.Dtos.Specialities;
 using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using System;
@@ -22,11 +24,11 @@ namespace Dsw2026Tpi.Application.Services
         {
             // 1. Validaciones 
             if (string.IsNullOrWhiteSpace(dto.Name) || dto.Name.Length < 3 || dto.Name.Length > 100)
-                throw new Exception("El nombre debe tener entre 3 y 100 caracteres.");
+                throw new ValidationException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
 
             if (string.IsNullOrWhiteSpace(dto.Description) || dto.Description.Length < 10 || dto.Description.Length > 100)
-                throw new Exception("La descripción es obligatoria y debe tener entre 10 y 100 caracteres.");
-            
+                throw new ValidationException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+
             // 2. Mapeo de entrada: Convertimos el DTO en la entidad real de la base de datos
             var speciality = new Speciality(dto.Name, dto.Description ?? string.Empty);
 
