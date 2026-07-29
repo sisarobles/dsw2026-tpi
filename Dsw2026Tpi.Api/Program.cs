@@ -83,10 +83,10 @@ public class Program
                 }
             }
             // --- Fin seed ---
-
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();
 
-            app.UseSerilogRequestLogging();
+           
 
             if (app.Environment.IsProduction())
             {
@@ -101,7 +101,7 @@ public class Program
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseCors();
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
+            
 
             app.MapControllers();
             app.MapHealthChecks("/health-check");
