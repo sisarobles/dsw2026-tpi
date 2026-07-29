@@ -4,6 +4,7 @@ using Dsw2026Tpi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dsw2026Tpi.Data.Migrations
 {
     [DbContext(typeof(Dsw2026TpiDbContext))]
-    partial class Dsw2026TpiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260728225109_RemoveAppointmentRowVersion")]
+    partial class RemoveAppointmentRowVersion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,8 +53,6 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AvailabilitySlotId");
-
-                    b.HasIndex("PatientId");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -238,15 +239,7 @@ namespace Dsw2026Tpi.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Dsw2026Tpi.Domain.Entities.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("AvailabilitySlot");
-
-                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.AvailabilityRule", b =>
