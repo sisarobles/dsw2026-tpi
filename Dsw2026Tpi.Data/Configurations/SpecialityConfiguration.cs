@@ -10,7 +10,6 @@ public class SpecialityConfiguration : IEntityTypeConfiguration<Speciality>
     {
         builder.ToTable("Specialities");
 
-        // Clave Primaria
         builder.HasKey(x => x.Id);
 
         builder.Property(s => s.Name)

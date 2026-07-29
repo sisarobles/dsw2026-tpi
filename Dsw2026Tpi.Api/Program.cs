@@ -88,17 +88,19 @@ public class Program
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();
 
+
            
 
             if (app.Environment.IsProduction())
             {
-                app.UseHttpsRedirection();
+                app.UseHttpsRedirection(); //en producción, fuerza HTTPS
             }
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwagger(); //permite el uso del swagger
+                app.UseSwaggerUI(); //uso de la interfaz de swagger
             }
+
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -106,7 +108,13 @@ public class Program
             app.UseCors();
             
 
-            app.MapControllers();
+            app.UseAuthentication(); //lee el header de autorización (Bearer <token>) y arma el usuario con los claims que tengamos definidos
+            app.UseAuthorization(); //chequear su el usuario tiene permiso para acceder a la ruta que solicita el request
+            app.UseCors(); //verifica el origen del request
+            app.UseMiddleware<ExceptionHandlingMiddleware>(); //envuelve todo lo siguiente en un try/catch para detectar errores especificamente en este caso
+
+
+            app.MapControllers(); //permite que se ingrese a buscar qué controlador o método atiende la ruta solicitada
             app.MapHealthChecks("/health-check");
 
             Log.Information("Aplicación iniciada correctamente");
