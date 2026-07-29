@@ -10,13 +10,19 @@ public class SpecialityConfiguration : IEntityTypeConfiguration<Speciality>
     {
         builder.ToTable("Specialities");
 
+        // Clave Primaria
+        builder.HasKey(x => x.Id);
+
         builder.Property(s => s.Name)
                .IsRequired()             
                .HasMaxLength(100);       
 
-        // 3. Validaciones para la Descripción
         builder.Property(s => s.Description)
-               .IsRequired(false)      
-               .HasMaxLength(500);
+               .IsRequired()      
+               .HasMaxLength(100);
+
+        builder.Property(x => x.IsActive)
+               .IsRequired()
+               .HasDefaultValue(true);
     }
 }

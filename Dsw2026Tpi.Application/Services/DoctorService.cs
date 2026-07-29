@@ -17,8 +17,8 @@ public class DoctorService : IDoctorService
 
     public async Task<Pagination<DoctorModel.Response>> GetAll(int pageSize, int pageIndex, string? name = null)
     {
-        var doctors = await _persistence.Paginate<Doctor, string>(pageSize, pageIndex, d => string.IsNullOrWhiteSpace(name) ||
-                                                   d.Name.Contains(name), x => x.Name, nameof(Doctor.Speciality));
+        var doctors = await _persistence.Paginate<Doctor, string>(pageSize, pageIndex, d => d.IsActive && (string.IsNullOrWhiteSpace(name) ||
+                                                   d.Name.Contains(name)), x => x.Name, nameof(Doctor.Speciality));
 
         return doctors.Map(d => new DoctorModel.Response(d.Id, d.Name, d.LicenseNumber,
             new DoctorModel.SpecialityDto(d.Speciality?.Id, d.Speciality?.Name)));
@@ -26,13 +26,23 @@ public class DoctorService : IDoctorService
 
     public async Task<DoctorResponseDto> CreateAsync(CreateDoctorDto dto)
     {
-        // 1. Mapeo de entrada
+        // 1. Validar que la especialidad exista
+        if (dto.SpecialityId.HasValue && dto.SpecialityId.Value != Guid.Empty)
+        {
+            var speciality = await _persistence.GetByIdAsync<Speciality>(dto.SpecialityId.Value);
+            if (speciality == null)
+            {
+                throw new Exception("La especialidad ingresada no existe."); 
+            }
+        }
+
+        // 2. Mapeo de entrada
         var doctor = new Doctor(dto.Name, dto.LicenseNumber, dto.SpecialityId );
 
-        // 2. Guardamos en la base de datos
+        // 3. Guardamos en la base de datos
         await _persistence.Add(doctor);
 
-        // 3. Mapeo de salida
+        // 4. Mapeo de salida
         return new DoctorResponseDto
         {
             Id = doctor.Id,
