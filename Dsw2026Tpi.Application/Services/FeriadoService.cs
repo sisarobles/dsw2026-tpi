@@ -15,7 +15,6 @@ public class FeriadoService : IFeriadoService
     public FeriadoService()
     {
         // Ajustar la ruta según dónde termine ubicado el archivo en el proyecto Api
-        // (se copia a bin junto con el resto de Sources, igual que roles.json)
         var path = Path.Combine(AppContext.BaseDirectory, "Sources", "feriados.json");
 
         if (!File.Exists(path))
