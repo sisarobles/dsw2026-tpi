@@ -4,6 +4,7 @@ using Dsw2026Tpi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dsw2026Tpi.Data.Migrations
 {
     [DbContext(typeof(Dsw2026TpiDbContext))]
-    partial class Dsw2026TpiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727004200_AgregarPatient")]
+    partial class AgregarPatient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,15 +47,16 @@ namespace Dsw2026Tpi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-
-                    b.HasIndex("AvailabilitySlotId");
-
-                    b.HasIndex("PatientId");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -215,14 +219,8 @@ namespace Dsw2026Tpi.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -236,27 +234,6 @@ namespace Dsw2026Tpi.Data.Migrations
 
                     b.ToTable("Specialities", (string)null);
                 });
-
-
-            modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.Appointment", b =>
-                {
-                    b.HasOne("Dsw2026Tpi.Domain.Entities.AvailabilitySlot", "AvailabilitySlot")
-                        .WithMany()
-                        .HasForeignKey("AvailabilitySlotId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Dsw2026Tpi.Domain.Entities.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AvailabilitySlot");
-
-                    b.Navigation("Patient");
-                });
-
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.AvailabilityRule", b =>
                 {

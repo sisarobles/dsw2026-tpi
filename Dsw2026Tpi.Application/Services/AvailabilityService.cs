@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using static Dsw2026Tpi.Application.Dtos.AvailabilityModel;
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -42,9 +41,19 @@ namespace Dsw2026Tpi.Application.Services
             request.DoctorId, request.Days.Count, totalSlots, now.Month, now.Year);
         }
 
-        public Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId)
+        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId) 
         {
-            throw new NotImplementedException();
+            var doctor = await _persistence.GetById<Doctor>(doctorId);
+            if (doctor == null)
+                throw new EntityNotFoundException("Doctor");
+
+            var rules = await _persistence.GetFiltered<AvailabilityRule>(r => r.DoctorId == doctorId);
+
+            return rules.Select(r => new AvailabilityModel.Response(
+                r.DayOfWeek.ToString(),
+                r.StartTime,
+                r.EndTime
+            ));
         }
 
         public async Task UpdateAvailability(AvailabilityModel.Request request)
