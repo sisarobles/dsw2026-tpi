@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Dsw2026Tpi.Api.Controllers
 {
-    [Route("api/appointments")]
+    [Route("appointments")]
     [ApiController]
-    public class AppointmentController : ControllerBase
+    public class AppointmentController : AppController
     {
         private readonly IAppointmentService _service;
         public AppointmentController(IAppointmentService service)
