@@ -20,18 +20,26 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<SpecialityResponseDto> CreateAsync(CreateSpecialityDto dto)
         {
-            // 1. Mapeo de entrada: Convertimos el DTO en la entidad real de la base de datos
+            // 1. Validaciones 
+            if (string.IsNullOrWhiteSpace(dto.Name) || dto.Name.Length < 3 || dto.Name.Length > 100)
+                throw new Exception("El nombre debe tener entre 3 y 100 caracteres.");
+
+            if (string.IsNullOrWhiteSpace(dto.Description) || dto.Description.Length < 10 || dto.Description.Length > 100)
+                throw new Exception("La descripción es obligatoria y debe tener entre 10 y 100 caracteres.");
+            
+            // 2. Mapeo de entrada: Convertimos el DTO en la entidad real de la base de datos
             var speciality = new Speciality(dto.Name, dto.Description ?? string.Empty);
 
-            // 2. Guardamos usando el repositorio genérico
+            // 3. Guardamos usando el repositorio genérico
             await _persistence.Add(speciality); 
 
-            // 3. Mapeo de salida: Devolvemos la respuesta segura
+            // 4. Mapeo de salida: Devolvemos la respuesta segura
             return new SpecialityResponseDto
             {
                 Id = speciality.Id,
                 Name = speciality.Name,
-                Description = speciality.Description
+                Description = speciality.Description,
+                IsAcive = speciality.IsActive
             };
         }
 
@@ -50,8 +58,19 @@ namespace Dsw2026Tpi.Application.Services
             {
                 Id = s.Id,
                 Name = s.Name,
-                Description = s.Description
+                Description = s.Description,
+                IsActive = s.IsActive
             }).ToList();
+        }
+
+        public async Task<bool> DeactivateAsync(Guid id)
+        {
+            var speciality = await _persistence.GetByIdAsync<Speciality>(id);
+            if (speciality == null) return false;
+
+            speciality.Deactivate();
+            await _persistence.UpdateAsync(speciality);
+            return true;
         }
 
     }

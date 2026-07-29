@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers;
 
 
-[ApiController]
-[Route("api/[controller]")]
+[Route("specialities")]
+[Authorize(Policy = Policies.AdminPolicy)]
 public class SpecialitiesController : ControllerBase
 {
     private readonly ISpecialityService _specialityService;
@@ -30,5 +30,14 @@ public class SpecialitiesController : ControllerBase
     {
         var result = await _specialityService.CreateAsync(dto);
         return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Deactivate(Guid id)
+    {
+        var success = await _service.DeactivateAsync(id);
+        if (!success) return NotFound();
+
+        return NoContent();
     }
 }
