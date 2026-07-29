@@ -1,4 +1,5 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Application.Extensions;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
@@ -19,7 +20,6 @@ namespace Dsw2026Tpi.Application.Services
         {
             _persistence = persistence;
         }
-
         public async Task CreateAvailability(AvailabilityModel.Request request)
         {
             //Verifico la existencia del doctor
@@ -27,59 +27,14 @@ namespace Dsw2026Tpi.Application.Services
             if (doctor == null)
                 throw new EntityNotFoundException("Doctor");
 
-            //Obtengo mes y año actual
-            DateTime CurrentDate = DateTime.Now;
-
-            int month = CurrentDate.Month;
-            int year = CurrentDate.Year;
-
-            var today = DateOnly.FromDateTime(DateTime.Now);
-
-            // Cuento la cantidad de días del mes
-            var daysInMonth = DateTime.DaysInMonth(year, month);
-
-            //Recorro cada día configurado por el administrador
-            foreach (var dayRequest in request.Days)  
-            {
-                //Validar de que StartTime<EndTime
-                if (dayRequest.StartTime >= dayRequest.EndTime)
-                    throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
-               
-                var rule = new AvailabilityRule(
-                    request.DoctorId,
-                    month,
-                    year,
-                    dayRequest.Day,
-                    dayRequest.StartTime,
-                    dayRequest.EndTime
-                );
-                await _persistence.Add(rule);
-
-                // buscar qué fechas del mes tienen ese día de la semana
-                for (int day = 1; day <= daysInMonth; day++)
-                {
-                    var date = new DateOnly(year, month, day);
-
-                    if (date.DayOfWeek == dayRequest.Day && date >= today)
-                    {
-                        //Genero slots cada 30min
-                        var StartTime = dayRequest.StartTime;
-
-                        while (StartTime < dayRequest.EndTime)
-                        {
-                            var SlotEndTime = StartTime.AddMinutes(30);
-                            var slot = new AvailabilitySlot(rule.Id, date, StartTime, SlotEndTime);
-                            await _persistence.Add(slot);
-                            StartTime = SlotEndTime;
-                        }
-
-                    }
-                }
-            }
-
+            //Obtengo fecha actual
+            var now = DateTime.UtcNow;
+            await CreateRulesAndSlots(request, now.Month, now.Year,
+            DateOnly.FromDateTime(now),
+            DateTime.DaysInMonth(now.Year, now.Month));
         }
 
-        public Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId) 
+        public Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId)
         {
             throw new NotImplementedException();
         }
@@ -89,80 +44,41 @@ namespace Dsw2026Tpi.Application.Services
             //Verifico la existencia del doctor
             var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
             if (doctor == null)
-                throw new EntityNotFoundException("Doctor");
+                throw new EntityNotFoundException(nameof(Doctor));
 
-            //Obtengo mes y año actual
-            DateTime CurrentDate = DateTime.Now;
-
-            int month = CurrentDate.Month;
-            int year = CurrentDate.Year;
-            var today = DateOnly.FromDateTime(DateTime.Now);
-
-            // Cuento la cantidad de días del mes
-            var daysInMonth = DateTime.DaysInMonth(year, month);
-
-            //Borro reglas y slots ya existentes de ese doctor
+            //Obtengo fecha actual
+            var now = DateTime.UtcNow;
 
             var reglasExistentes = await _persistence.GetFiltered<AvailabilityRule>(
-                r => r.DoctorId == request.DoctorId &&
-                r.Month == month &&
-                r.Year == year &&
-                !r.Deleted);
+               r => r.DoctorId == request.DoctorId &&
+               r.Month == now.Month &&
+               r.Year == now.Year &&
+               !r.Deleted);
 
             foreach (var regla in reglasExistentes)
-            {
-                var slotsExistentes = await _persistence.GetFiltered<AvailabilitySlot>(
-                    s => s.AvailabilityRuleId == regla.Id && !s.Deleted);
-                
-                foreach (var slot in slotsExistentes)
-                {
-                    if(slot.Status == SlotStatus.AVAILABLE)
-                      await _persistence.Delete(slot);
-                }
+                await regla.DeleteIfNoBookedSlots(_persistence);
 
-                await _persistence.Delete(regla);
-            }
+            await CreateRulesAndSlots(request,now.Month,now.Year,
+              DateOnly.FromDateTime(now),
+              DateTime.DaysInMonth(now.Year, now.Month));
+        }
 
-            //Recorro cada día configurado por el administrador
+        private async Task CreateRulesAndSlots(AvailabilityModel.Request request,int month,int year, DateOnly today,int daysInMonth)
+        {
             foreach (var dayRequest in request.Days)
             {
-                //Valido de que StartTime<EndTime
-                if (dayRequest.StartTime >= dayRequest.EndTime)
-                    throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
+                dayRequest.ValidateTimeRange();
+                await dayRequest.ValidateNoOverlap(_persistence, request.DoctorId, month, year);
 
                 var rule = new AvailabilityRule(
-                    request.DoctorId,
-                    month,
-                    year,
-                    dayRequest.Day,
-                    dayRequest.StartTime,
-                    dayRequest.EndTime
-                );
+                    request.DoctorId, month, year,
+                    dayRequest.Day, dayRequest.StartTime, dayRequest.EndTime);
                 await _persistence.Add(rule);
 
-                // buscar qué fechas del mes tienen ese día de la semana
-                for (int day = 1; day <= daysInMonth; day++)
-                {
-                    var date = new DateOnly(year, month, day);
-
-                    if (date.DayOfWeek == dayRequest.Day && date >= today)
-                    {
-                        //Genero slots cada 30min
-                        var StartTime = dayRequest.StartTime;
-
-                        while (StartTime < dayRequest.EndTime)
-                        {
-                            var SlotEndTime = StartTime.AddMinutes(30);
-                            var slot = new AvailabilitySlot(rule.Id, date, StartTime, SlotEndTime);
-                            await _persistence.Add(slot);
-                            StartTime = SlotEndTime;
-                        }
-
-                    }
-                }
+                var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year);
+                foreach (var slot in slots)
+                    await _persistence.Add(slot);
             }
-
         }
     }
 }
-
