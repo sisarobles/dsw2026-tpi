@@ -8,122 +8,94 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Dsw2026Tpi.CrossCutting.Resources
-{
+namespace Dsw2026Tpi.CrossCutting.Resources {
     using System;
-
-
+    
+    
     /// <summary>
     ///   Clase de recurso fuertemente tipado, para buscar cadenas traducidas, etc.
     /// </summary>
+    // StronglyTypedResourceBuilder generó automáticamente esta clase
+    // a través de una herramienta como ResGen o Visual Studio.
+    // Para agregar o quitar un miembro, edite el archivo .ResX y, a continuación, vuelva a ejecutar ResGen
+    // con la opción /str o recompile su proyecto de VS.
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class ErrorCodes
-    {
-
+    public class ErrorCodes {
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ErrorCodes()
-        {
+        internal ErrorCodes() {
         }
-
+        
+        /// <summary>
+        ///   Devuelve la instancia de ResourceManager almacenada en caché utilizada por esta clase.
+        /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager
-        {
-            get
-            {
-                if (object.ReferenceEquals(resourceMan, null))
-                {
+        public static global::System.Resources.ResourceManager ResourceManager {
+            get {
+                if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Dsw2026Tpi.CrossCutting.Resources.ErrorCodes", typeof(ErrorCodes).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-
+        
+        /// <summary>
+        ///   Reemplaza la propiedad CurrentUICulture del subproceso actual para todas las
+        ///   búsquedas de recursos mediante esta clase de recurso fuertemente tipado.
+        /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture
-        {
-            get
-            {
+        public static global::System.Globalization.CultureInfo Culture {
+            get {
                 return resourceCulture;
             }
-            set
-            {
+            set {
                 resourceCulture = value;
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a El turno seleccionado ya no se encuentra disponible.
         /// </summary>
-        public static string APPOINTMENT_CONFLICT
-        {
-            get
-            {
+        public static string APPOINTMENT_CONFLICT {
+            get {
                 return ResourceManager.GetString("APPOINTMENT_CONFLICT", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a No se pueden reservar turnos en fechas u horarios pasados.
         /// </summary>
-        public static string APPOINTMENT_PAST_DATE
-        {
-            get
-            {
+        public static string APPOINTMENT_PAST_DATE {
+            get {
                 return ResourceManager.GetString("APPOINTMENT_PAST_DATE", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a Usuario o contraseña incorrectos.
         /// </summary>
-        public static string AUTHENTICATION_FAILED
-        {
-            get
-            {
+        public static string AUTHENTICATION_FAILED {
+            get {
                 return ResourceManager.GetString("AUTHENTICATION_FAILED", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a Se requieren permisos para la operación solicitada.
         /// </summary>
-        public static string AUTHORIZATION_FAILED
-        {
-            get
-            {
+        public static string AUTHORIZATION_FAILED {
+            get {
                 return ResourceManager.GetString("AUTHORIZATION_FAILED", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Busca una cadena traducida similar a El turno seleccionado no se encuentra disponible.
-        /// </summary>
-        public static string AVAILABILITY_SLOT_NOT_AVAILABLE
-        {
-            get
-            {
-                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_AVAILABLE", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Busca una cadena traducida similar a El turno no se encuentra reservado.
-        /// </summary>
-        public static string AVAILABILITY_SLOT_NOT_BOOKED
-        {
-            get
-            {
-                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_BOOKED", resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a No se puede modificar la disponibilidad porque hay turnos reservados.
         /// </summary>
@@ -143,78 +115,91 @@ namespace Dsw2026Tpi.CrossCutting.Resources
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a El turno seleccionado no se encuentra disponible.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_AVAILABLE {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_AVAILABLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El turno no se encuentra reservado.
+        /// </summary>
+        public static string AVAILABILITY_SLOT_NOT_BOOKED {
+            get {
+                return ResourceManager.GetString("AVAILABILITY_SLOT_NOT_BOOKED", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a No es posible cancelar el turno.
         /// </summary>
-        public static string CANCEL_APPOINTMENT
-        {
-            get
-            {
+        public static string CANCEL_APPOINTMENT {
+            get {
                 return ResourceManager.GetString("CANCEL_APPOINTMENT", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a La entidad {0} no se encontró.
         /// </summary>
-        public static string ENTITY_NOTFOUND
-        {
-            get
-            {
+        public static string ENTITY_NOTFOUND {
+            get {
                 return ResourceManager.GetString("ENTITY_NOTFOUND", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   Busca una cadena traducida similar a DNI inválido, debe tener entre 7 y 8 dígitos.
+        ///   Busca una cadena traducida similar a El dni ingresado no está registrado o es inválido.
         /// </summary>
-        public static string PATIENT_INVALID_DNI
-        {
-            get
-            {
+        public static string PATIENT_INVALID_DNI {
+            get {
                 return ResourceManager.GetString("PATIENT_INVALID_DNI", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a Se produjo un error al registrar el usuario.
         /// </summary>
-        public static string REGISTER_USER_CONFLICT
-        {
-            get
-            {
+        public static string REGISTER_USER_CONFLICT {
+            get {
                 return ResourceManager.GetString("REGISTER_USER_CONFLICT", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a Datos de registración de usuario no válidos.
         /// </summary>
-        public static string REGISTER_USER_INVALID
-        {
-            get
-            {
+        public static string REGISTER_USER_INVALID {
+            get {
                 return ResourceManager.GetString("REGISTER_USER_INVALID", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Se ha excedido el límite de solicitudes permitidas.
+        /// </summary>
+        public static string TOO_MANY_REQUESTS {
+            get {
+                return ResourceManager.GetString("TOO_MANY_REQUESTS", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Busca una cadena traducida similar a Se produjo un error no controlado.
         /// </summary>
-        public static string UNHANDLED_ERROR
-        {
-            get
-            {
+        public static string UNHANDLED_ERROR {
+            get {
                 return ResourceManager.GetString("UNHANDLED_ERROR", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Busca una cadena traducida similar a Uno o más errores de validación ocurrieron.
         /// </summary>
-        public static string VALIDATION_ERROR
-        {
-            get
-            {
+        public static string VALIDATION_ERROR {
+            get {
                 return ResourceManager.GetString("VALIDATION_ERROR", resourceCulture);
             }
         }
