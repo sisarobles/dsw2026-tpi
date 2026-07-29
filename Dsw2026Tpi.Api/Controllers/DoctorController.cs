@@ -1,4 +1,4 @@
-﻿using Dsw2026Tpi.Application.Dtos.Doctors;
+﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -26,9 +26,9 @@ public class DoctorController : AppController
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateDoctorDto dto)
+    public async Task<IActionResult> Create([FromBody] DoctorModel.Request request)
     {
-        var result = await _service.CreateAsync(dto);
+        var result = await _service.CreateAsync(request);
         return Ok(result);
     }
 
