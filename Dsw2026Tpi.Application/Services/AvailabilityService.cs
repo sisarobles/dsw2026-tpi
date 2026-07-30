@@ -53,7 +53,7 @@ namespace Dsw2026Tpi.Application.Services
 
             return rules.Select(r => new AvailabilityModel.Response(
                 r.Id,
-                r.DayOfWeek.ToString(),
+                r.DayOfWeek.ToSpanish(),
                 r.StartTime,
                 r.EndTime
             ));
