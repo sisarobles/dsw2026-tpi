@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Dsw2026Tpi.Api.Controllers
 {
-    [Route("appointments")]
+    [Route("api/appointments")]
     [ApiController]
     public class AppointmentController : AppController
     {
