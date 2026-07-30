@@ -34,6 +34,5 @@ namespace Dsw2026Tpi.Api.Controllers
             await _service.UpdateAvailability(request);
             return Ok();
         }
-
     }
 }
