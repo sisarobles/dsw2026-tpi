@@ -3,6 +3,7 @@ using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -20,6 +21,7 @@ namespace Dsw2026Tpi.Api.Controllers
 
         [HttpPost]
         [Authorize(Policy = Policies.PatientPolicy)]
+        [EnableRateLimiting("AppointmentPolicy")]
         public async Task<IActionResult> CreateAppointment([FromBody] AppointmentModel.Request request)
         {
             var result = await _service.CreateAppointment(request);
@@ -48,6 +50,15 @@ namespace Dsw2026Tpi.Api.Controllers
                                                                 [FromQuery] Guid? specialtyId, [FromQuery] Guid? doctorId,
                                                                 [FromQuery] long? dni, [FromQuery] DateOnly? date) {
             var request = new AppointmentSearchModel.Request(specialtyId, doctorId, dni, date);
+            var result = await _service.GetAppointmentBySearch(request, pageSize, pageIndex);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize(Policy = Policies.AdminPolicy)]
+        public async Task<IActionResult> GetAppointmentsByDate([FromQuery] DateOnly date, [FromQuery] int pageSize, [FromQuery] int pageIndex)
+        {
+            var request = new AppointmentSearchModel.Request(null, null, null, date);
             var result = await _service.GetAppointmentBySearch(request, pageSize, pageIndex);
             return Ok(result);
         }

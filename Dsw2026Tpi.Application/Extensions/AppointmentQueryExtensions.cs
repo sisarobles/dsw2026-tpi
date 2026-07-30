@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace Dsw2026Tpi.Application
+namespace Dsw2026Tpi.Application.Extensions
 {
     public static class AppointmentQueryExtensions
     {
