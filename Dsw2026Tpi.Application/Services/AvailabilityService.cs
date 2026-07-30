@@ -27,9 +27,7 @@ namespace Dsw2026Tpi.Application.Services
         public async Task CreateAvailability(AvailabilityModel.Request request)
         {
             //Verifico la existencia del doctor
-            var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
-            if (doctor == null)
-                throw new EntityNotFoundException(nameof(Doctor));
+            await GetActiveDoctorOrThrow(request.DoctorId);
 
             //Obtengo fecha actual
             var now = DateTime.UtcNow;
@@ -43,9 +41,7 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
         {
-            var doctor = await _persistence.GetById<Doctor>(doctorId);
-            if (doctor == null)
-                throw new EntityNotFoundException(nameof(Doctor));
+            await GetActiveDoctorOrThrow(doctorId);
 
             var now = DateTime.UtcNow;
 
@@ -65,44 +61,19 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task UpdateAvailability(AvailabilityModel.Request request)
         {
-            //Verifico la existencia del doctor
-            var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
-            if (doctor == null)
-                throw new EntityNotFoundException(nameof(Doctor));
+            await GetActiveDoctorOrThrow(request.DoctorId);
 
-            //Obtengo fecha actual
             var now = DateTime.UtcNow;
+            var reglasBorradas = await DeleteExistingRules(request.DoctorId, now.Month, now.Year);
 
-            var reglasExistentes = await _persistence.GetFiltered<AvailabilityRule>(
-               r => r.DoctorId == request.DoctorId &&
-               r.Month == now.Month &&
-               r.Year == now.Year &&
-               !r.Deleted);
-
-            var cantidadReglasBorradas = reglasExistentes.Count();
-
-            foreach (var regla in reglasExistentes)
-            {
-                try
-                {
-                    await regla.DeleteIfNoBookedSlots(_persistence);
-                }
-                catch (BusinessRuleException)
-                {
-                    _logger.LogWarning(
-                        "No se pudo actualizar disponibilidad del doctor {DoctorId}: la regla {ReglaId} tiene turnos reservados",
-                        request.DoctorId, regla.Id);
-                    throw; 
-                }
-            }
-
-            var totalSlots = await CreateRulesAndSlots(request, now.Month, now.Year,
+            var totalSlots = await CreateRulesAndSlots(
+                request, now.Month, now.Year,
                 DateOnly.FromDateTime(now),
                 DateTime.DaysInMonth(now.Year, now.Month));
 
             _logger.LogInformation(
-                "Disponibilidad actualizada para doctor {DoctorId}: {ReglasReemplazadas} regla(s) reemplazada(s), {TotalSlots} slot(s) nuevo(s) para {Mes}/{Anio}",
-                request.DoctorId, cantidadReglasBorradas, totalSlots, now.Month, now.Year);
+                "Disponibilidad actualizada para doctor {DoctorId}: {Reglas} reemplazada(s), {Slots} slot(s) para {Mes}/{Anio}",
+                request.DoctorId, reglasBorradas, totalSlots, now.Month, now.Year);
         }
 
         private async Task<int> CreateRulesAndSlots(AvailabilityModel.Request request,int month,int year, DateOnly today,int daysInMonth)
@@ -137,6 +108,40 @@ namespace Dsw2026Tpi.Application.Services
             }
 
             return totalSlots;
+        }
+        private async Task<Doctor> GetActiveDoctorOrThrow(Guid doctorId)
+        {
+            var doctor = await _persistence.GetById<Doctor>(doctorId);
+            if (doctor == null || !doctor.IsActive)
+                throw new EntityNotFoundException(nameof(Doctor));
+            return doctor;
+        }
+        private async Task<int> DeleteExistingRules(Guid doctorId, int month, int year)
+        {
+            var reglasExistentes = await _persistence.GetFiltered<AvailabilityRule>(
+                r => r.DoctorId == doctorId &&
+                     r.Month == month &&
+                     r.Year == year &&
+                     !r.Deleted);
+
+            var cantidad = reglasExistentes.Count();
+
+            foreach (var regla in reglasExistentes)
+            {
+                try
+                {
+                    await regla.DeleteIfNoBookedSlots(_persistence);
+                }
+                catch (BusinessRuleException)
+                {
+                    _logger.LogWarning(
+                        "No se pudo borrar regla {ReglaId} del doctor {DoctorId}: tiene turnos reservados",
+                        regla.Id, doctorId);
+                    throw;
+                }
+            }
+
+            return cantidad;
         }
     }
     
