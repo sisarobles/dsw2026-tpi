@@ -6,7 +6,7 @@ using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 
-namespace Dsw2026Tpi.Application
+namespace Dsw2026Tpi.Application.Extensions
 {
     public static class AppointmentValidationExtensions
     {

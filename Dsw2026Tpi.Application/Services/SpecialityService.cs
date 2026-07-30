@@ -15,6 +15,7 @@ namespace Dsw2026Tpi.Application.Services
     public class SpecialityService : ISpecialityService
     {
         private readonly IPersistence _persistence;
+
         public SpecialityService(IPersistence persistence)
         {
             _persistence = persistence;
@@ -23,42 +24,55 @@ namespace Dsw2026Tpi.Application.Services
         public async Task<SpecialityModel.Response> CreateAsync(SpecialityModel.Request request)
         {
             if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length < 3 || request.Name.Length > 100)
-                throw new ValidationException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
 
             if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length < 10 || request.Description.Length > 100)
-                throw new ValidationException(ErrorCodes.APPOINTMENT_CONFLICT, nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
 
-            var speciality = new Speciality(request.Name, request.Description ?? string.Empty);
+            var speciality = new Speciality(request.Name, request.Description);
+            await _persistence.Add(speciality);
 
-            await _persistence.Add(speciality); 
-
-            return new SpecialityModel.Response
-            (
-               speciality.Id,
-            speciality.Name,
-            speciality.Description,
-            speciality.IsActive
+            return new SpecialityModel.Response(
+                speciality.Id,
+                speciality.Name,
+                speciality.Description,
+                speciality.IsActive
             );
         }
 
-        public async Task<IEnumerable<SpecialityModel.Response>> GetAllAsync()
+        public async Task<Pagination<SpecialityModel.Response>> GetAllAsync(int pageSize, int pageIndex, string? name = null)
         {
-            
-            var specialities = await _persistence.GetAll<Speciality>();
+            var specialities = await _persistence.Paginate<Speciality, string>(pageSize, pageIndex, s => s.IsActive &&
+                (string.IsNullOrWhiteSpace(name) || s.Name.Contains(name)), x => x.Name);
 
-            if (specialities == null)
-            {
-                return new List<SpecialityModel.Response>();
-            }
+            return specialities.Map(s => new SpecialityModel.Response(
+                s.Id,
+                s.Name,
+                s.Description,
+                s.IsActive
+            ));
+        }
 
-            return specialities
-             .Where(s => s.IsActive)
-             .Select(s => new SpecialityModel.Response(
-                 s.Id,
-                 s.Name,
-                 s.Description,
-                 s.IsActive
-             )).ToList();
+        public async Task<SpecialityModel.Response> UpdateAsync(Guid id, SpecialityModel.Request request)
+        {
+            var speciality = await _persistence.GetById<Speciality>(id)
+                ?? throw new EntityNotFoundException(nameof(Speciality));
+
+            if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length < 3 || request.Name.Length > 100)
+                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
+
+            if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length < 10 || request.Description.Length > 100)
+                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
+
+            speciality.Update(request.Name, request.Description);
+            await _persistence.Update(speciality);
+
+            return new SpecialityModel.Response(
+                speciality.Id,
+                speciality.Name,
+                speciality.Description,
+                speciality.IsActive
+            );
         }
 
         public async Task<bool> DeactivateAsync(Guid id)
@@ -70,6 +84,5 @@ namespace Dsw2026Tpi.Application.Services
             await _persistence.Update(speciality);
             return true;
         }
-
     }
 }

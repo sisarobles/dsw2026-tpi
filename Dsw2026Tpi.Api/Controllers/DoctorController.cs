@@ -29,7 +29,7 @@ public class DoctorController : AppController
     public async Task<IActionResult> Create([FromBody] DoctorModel.Request request)
     {
         var result = await _service.CreateAsync(request);
-        return Ok(result);
+        return Created(string.Empty, result);
     }
 
     // Petición DELETE: Recibe un ID en la URL 
@@ -44,5 +44,12 @@ public class DoctorController : AppController
         }
 
         return NoContent(); // Código 204: Todo salió bien y no hay datos que devolver
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] DoctorModel.Request request)
+    {
+        var result = await _service.UpdateAsync(id, request);
+        return Ok(result);
     }
 }
