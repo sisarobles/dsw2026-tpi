@@ -10,7 +10,7 @@ namespace Dsw2026Tpi.Application.Interfaces
     {
         Task CreateAvailability(AvailabilityModel.Request request);
         Task UpdateAvailability(AvailabilityModel.Request request);
-        Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId);
+        Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId);
         
     }
 }

@@ -41,15 +41,22 @@ namespace Dsw2026Tpi.Application.Services
             request.DoctorId, request.Days.Count, totalSlots, now.Month, now.Year);
         }
 
-        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDni(Guid doctorId) 
+        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
         {
             var doctor = await _persistence.GetById<Doctor>(doctorId);
             if (doctor == null)
-                throw new EntityNotFoundException("Doctor");
+                throw new EntityNotFoundException(nameof(Doctor));
 
-            var rules = await _persistence.GetFiltered<AvailabilityRule>(r => r.DoctorId == doctorId);
+            var now = DateTime.UtcNow;
+
+            var rules = await _persistence.GetFiltered<AvailabilityRule>(
+                r => r.DoctorId == doctorId &&
+                r.Month == now.Month &&
+                r.Year == now.Year &&
+                !r.Deleted);
 
             return rules.Select(r => new AvailabilityModel.Response(
+                r.Id,
                 r.DayOfWeek.ToString(),
                 r.StartTime,
                 r.EndTime
