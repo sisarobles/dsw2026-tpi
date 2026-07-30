@@ -9,7 +9,8 @@ public record LoginAdminModel
         [EmailAddress(ErrorMessage = "El formato del email no es válido")]
         string Email,
 
-        [Required(ErrorMessage = "La contraseña es obligatoria")]
+         [Required(ErrorMessage = "La contraseña es obligatoria")]
+        [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres")]
         string Password
     );
 

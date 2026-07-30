@@ -44,10 +44,7 @@ public class AuthenticationService : IAuthenticationService
     {
         if (!request.Email.IsEmailValid()) 
         throw new AuthenticationException();
-        if (request.Password.Length < 8)
-            throw new ValidationException(
-                ErrorCodes.REGISTER_USER_INVALID,
-                nameof(ErrorCodes.REGISTER_USER_INVALID));
+      
         var user = await _userManager.FindByEmailAsync(request.Email) 
             ?? throw new AuthenticationException();
         var result = await _signInManager.CheckPassword(user, request.Password);
