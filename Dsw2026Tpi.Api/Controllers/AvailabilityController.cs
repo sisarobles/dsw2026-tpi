@@ -3,13 +3,14 @@ using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Dsw2026Tpi.Api.Controllers
 {
-    [Route("availabilities")]
+    [Route("api/availabilities")]
     [ApiController]
     [Authorize(Policy = Policies.AdminPolicy)]
-
+    [EnableRateLimiting("GeneralPolicy")]
     public class AvailabilityController : AppController
     {
         private IAvailabilityService _service;

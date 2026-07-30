@@ -1,5 +1,6 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.Application.Services;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,12 @@ namespace Dsw2026Tpi.Api.Controllers;
 public class DoctorController : AppController
 {
     private readonly IDoctorService _service;
+    private readonly IAvailabilityService _availabilityService;
 
-    public DoctorController(IDoctorService service)
+    public DoctorController(IDoctorService service, IAvailabilityService availabilityService)
     {
         _service = service;
+        _availabilityService = availabilityService;
     }
 
     [HttpGet]
@@ -23,6 +26,15 @@ public class DoctorController : AppController
     {
         var doctors = await _service.GetAll(pageSize, pageIndex, name);
         return Ok(doctors);
+    }
+
+    [HttpGet("{id}/availabilities")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAvailabilities(
+    [FromRoute] Guid id)
+    {
+        var result = await _availabilityService.GetAvailabilitiesByDoctor(id);
+        return Ok(result);
     }
 
     [HttpPost]
