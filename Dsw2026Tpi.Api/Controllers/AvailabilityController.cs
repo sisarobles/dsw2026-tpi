@@ -10,7 +10,7 @@ namespace Dsw2026Tpi.Api.Controllers
     [Route("api/availabilities")]
     [ApiController]
     [Authorize(Policy = Policies.AdminPolicy)]
-    [EnableRateLimiting("GeneralPolicy")]
+    //[EnableRateLimiting("GeneralPolicy")]
     public class AvailabilityController : AppController
     {
         private IAvailabilityService _service;
