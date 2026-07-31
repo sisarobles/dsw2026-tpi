@@ -97,9 +97,16 @@ namespace Dsw2026Tpi.Application.Services
                 var rule = new AvailabilityRule(
                     request.DoctorId, month, year,
                     dayRequest.Day, dayRequest.StartTime, dayRequest.EndTime);
-                await _persistence.Add(rule);
 
                 var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year, _feriadoService);
+
+                if (!slots.Any())
+                {
+                    continue; 
+                }
+
+                await _persistence.Add(rule);
+
                 foreach (var slot in slots)
                 {
                     await _persistence.Add(slot);
