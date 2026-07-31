@@ -23,7 +23,7 @@ namespace Dsw2026Tpi.Application.Services
             _feriadoService = feriadoService;
             _logger = logger;
         }
-        public async Task CreateAvailability(AvailabilityModel.Request request)
+        public async Task<IEnumerable<AvailabilityModel.Response>> CreateAvailability(AvailabilityModel.Request request)
         {
             //Verifico la existencia del doctor
             await GetActiveDoctorOrThrow(request.DoctorId);
@@ -38,6 +38,8 @@ namespace Dsw2026Tpi.Application.Services
             modulo: "Availability",
             accion: "CreateAvailability",
             detalle: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s), {totalSlots} slot(s) generados para {now.Month}/{now.Year}");
+
+            return await GetAvailabilitiesByDoctor(request.DoctorId);
         }
 
         public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
@@ -60,7 +62,7 @@ namespace Dsw2026Tpi.Application.Services
             ));
         }
 
-        public async Task UpdateAvailability(AvailabilityModel.Request request)
+        public async Task<IEnumerable<AvailabilityModel.Response>> UpdateAvailability(AvailabilityModel.Request request)
         {
             await GetActiveDoctorOrThrow(request.DoctorId);
 
@@ -76,6 +78,8 @@ namespace Dsw2026Tpi.Application.Services
             modulo: "Availability",
             accion: "UpdateAvailability",
             detalle: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s), {totalSlots} slot(s) generados para {now.Month}/{now.Year}");
+
+            return await GetAvailabilitiesByDoctor(request.DoctorId);
         }
 
         private async Task<int> CreateRulesAndSlots(AvailabilityModel.Request request,int month,int year, DateOnly today,int daysInMonth)
