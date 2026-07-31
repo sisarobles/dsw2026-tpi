@@ -17,12 +17,12 @@ public static class PersistenceConfigurationExtensions
         //Agregar contexto (O/RM) y utilizar SQL Server para DB
         services.AddDbContext<Dsw2026TpiDbContext>(options =>
         {
-            options.UseSqlServer(connectionString);
+            options.UseSqlite(connectionString);
         });
 
         services.AddDbContext<AuthenticationDbContext>(options =>
         {
-            options.UseSqlServer(connectionString);
+            options.UseSqlite(connectionString);
             options.UseSeeding((c, t) =>
             {
                 c.Seedwork<IdentityRole>("Sources\\roles.json");

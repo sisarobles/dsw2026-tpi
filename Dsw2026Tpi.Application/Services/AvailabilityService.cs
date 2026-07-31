@@ -143,6 +143,7 @@ namespace Dsw2026Tpi.Application.Services
 
             return cantidad;
         }
+
         public async Task<Pagination<AvailabilityModel.SlotResponse>> GetAvailableSlots(Guid doctorId,int pageSize,int pageIndex,DateOnly? date = null)
         {
             await GetActiveDoctorOrThrow(doctorId);

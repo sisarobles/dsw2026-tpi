@@ -9,7 +9,6 @@ namespace Dsw2026Tpi.Api.Controllers
 {
     [Route("api/availabilities")]
     [ApiController]
-    [Authorize(Policy = Policies.AdminPolicy)]
     public class AvailabilityController : AppController
     {
         private IAvailabilityService _service;
@@ -20,6 +19,7 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = Policies.AdminPolicy)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateAvailability([FromBody] AvailabilityModel.Request request)
         {
@@ -28,6 +28,7 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
         [HttpPut]
+        [Authorize(Policy = Policies.AdminPolicy)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> UpdateAvailability([FromBody] AvailabilityModel.Request request)
         {
