@@ -2,13 +2,12 @@
 using Dsw2026Tpi.Application.Extensions;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
-using Dsw2026Tpi.CrossCutting.Resources;
+using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using static Dsw2026Tpi.Application.Dtos.AvailabilityModel;
+
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -16,9 +15,9 @@ namespace Dsw2026Tpi.Application.Services
     {
         private readonly IPersistence _persistence;
         private readonly IFeriadoService _feriadoService;
-        private readonly ILogger<AvailabilityService> _logger;
+        private readonly ILogService _logger;
 
-        public AvailabilityService(IPersistence persistence, IFeriadoService feriadoService, ILogger<AvailabilityService> logger)
+        public AvailabilityService(IPersistence persistence, IFeriadoService feriadoService, ILogService logger)
         {
             _persistence = persistence;
             _feriadoService = feriadoService;
@@ -35,8 +34,10 @@ namespace Dsw2026Tpi.Application.Services
             DateOnly.FromDateTime(now),
             DateTime.DaysInMonth(now.Year, now.Month));
 
-            _logger.LogInformation("Disponibilidad creada para doctor {DoctorId}: {DiasConfigurados} día(s), {TotalSlots} slot(s) generado(s) para {Mes}/{Anio}",
-            request.DoctorId, request.Days.Count, totalSlots, now.Month, now.Year);
+            await _logger.RegistrarAsync(
+            modulo: "Availability",
+            accion: "CreateAvailability",
+            detalle: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s), {totalSlots} slot(s) generados para {now.Month}/{now.Year}");
         }
 
         public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
@@ -71,9 +72,10 @@ namespace Dsw2026Tpi.Application.Services
                 DateOnly.FromDateTime(now),
                 DateTime.DaysInMonth(now.Year, now.Month));
 
-            _logger.LogInformation(
-                "Disponibilidad actualizada para doctor {DoctorId}: {Reglas} reemplazada(s), {Slots} slot(s) para {Mes}/{Anio}",
-                request.DoctorId, reglasBorradas, totalSlots, now.Month, now.Year);
+            await _logger.RegistrarAsync(
+            modulo: "Availability",
+            accion: "UpdateAvailability",
+            detalle: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s), {totalSlots} slot(s) generados para {now.Month}/{now.Year}");
         }
 
         private async Task<int> CreateRulesAndSlots(AvailabilityModel.Request request,int month,int year, DateOnly today,int daysInMonth)
@@ -88,18 +90,26 @@ namespace Dsw2026Tpi.Application.Services
                 }
                 catch (BusinessRuleException)
                 {
-                    _logger.LogWarning(
-                        "Solapamiento de horarios al configurar disponibilidad: doctor {DoctorId}, día {Dia}, {Inicio}-{Fin}",
-                        request.DoctorId, dayRequest.Day, dayRequest.StartTime, dayRequest.EndTime);
-                    throw;
+                    await _logger.RegistrarAsync(
+                    modulo: "Availability",
+                    accion: "CreateAvailability",
+                    detalle: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
+                    nivel: LogNivel.Warning);
                 }
 
                 var rule = new AvailabilityRule(
                     request.DoctorId, month, year,
                     dayRequest.Day, dayRequest.StartTime, dayRequest.EndTime);
-                await _persistence.Add(rule);
 
                 var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year, _feriadoService);
+
+                if (!slots.Any())
+                {
+                    continue;
+                }
+
+                await _persistence.Add(rule);
+
                 foreach (var slot in slots)
                 {
                     await _persistence.Add(slot);
@@ -134,9 +144,11 @@ namespace Dsw2026Tpi.Application.Services
                 }
                 catch (BusinessRuleException)
                 {
-                    _logger.LogWarning(
-                        "No se pudo borrar regla {ReglaId} del doctor {DoctorId}: tiene turnos reservados",
-                        regla.Id, doctorId);
+                    await _logger.RegistrarAsync(
+                    modulo: "Availability",
+                    accion: "UpdateAvailability",
+                    detalle: $"No se pudo eliminar la regla {regla.Id} del doctor {doctorId}: existen turnos reservados",
+                    nivel: LogNivel.Warning);
                     throw;
                 }
             }
