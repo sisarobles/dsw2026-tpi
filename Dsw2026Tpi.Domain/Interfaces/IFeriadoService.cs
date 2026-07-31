@@ -4,7 +4,12 @@ using System.Text;
 
 namespace Dsw2026Tpi.Domain.Interfaces
 {
-    internal interface IFeriadoService
+    public interface IFeriadoService
     {
+        bool EsFeriado(DateOnly fecha);
+        FeriadoInfo? GetFeriado(DateOnly fecha);
     }
+
+    public record FeriadoInfo(DateOnly Fecha, string Nombre, string Tipo);
+
 }
