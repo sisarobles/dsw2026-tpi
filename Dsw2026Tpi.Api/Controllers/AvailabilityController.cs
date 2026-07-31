@@ -23,8 +23,8 @@ namespace Dsw2026Tpi.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateAvailability([FromBody] AvailabilityModel.Request request)
         {
-            await _service.CreateAvailability(request);
-            return Created(string.Empty, null);
+            var response = await _service.CreateAvailability(request);
+            return Created(string.Empty, response);
         }
 
         [HttpPut]
@@ -32,8 +32,8 @@ namespace Dsw2026Tpi.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> UpdateAvailability([FromBody] AvailabilityModel.Request request)
         {
-            await _service.UpdateAvailability(request);
-            return Ok();
+            var response = await _service.UpdateAvailability(request);
+            return Ok(response);
         }
 
         [HttpGet("{doctorId}/slots")]
