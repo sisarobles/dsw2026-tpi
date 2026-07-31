@@ -9,7 +9,6 @@ namespace Dsw2026Tpi.Api.Controllers
 {
     [Route("api/availabilities")]
     [ApiController]
-    [Authorize(Policy = Policies.AdminPolicy)]
     public class AvailabilityController : AppController
     {
         private IAvailabilityService _service;
@@ -20,19 +19,31 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = Policies.AdminPolicy)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateAvailability([FromBody] AvailabilityModel.Request request)
         {
-            await _service.CreateAvailability(request);
-            return Created(string.Empty, null);
+            var response = await _service.CreateAvailability(request);
+            return Created(string.Empty, response);
         }
 
         [HttpPut]
+        [Authorize(Policy = Policies.AdminPolicy)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> UpdateAvailability([FromBody] AvailabilityModel.Request request)
         {
-            await _service.UpdateAvailability(request);
-            return Ok();
+            var response = await _service.UpdateAvailability(request);
+            return Ok(response);
+        }
+
+        [HttpGet("{doctorId}/slots")]
+        [Authorize(Policy = Policies.PatientPolicy)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAvailableSlots([FromRoute] Guid doctorId, [FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 1,
+        [FromQuery] DateOnly? date = null)
+        {
+            var result = await _service.GetAvailableSlots(doctorId, pageSize, pageIndex, date);
+            return Ok(result);
         }
     }
 }
