@@ -11,6 +11,6 @@ namespace Dsw2026Tpi.Application.Interfaces
         Task CreateAvailability(AvailabilityModel.Request request);
         Task UpdateAvailability(AvailabilityModel.Request request);
         Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId);
-        
+        Task<Pagination<AvailabilityModel.SlotResponse>> GetAvailableSlots(Guid doctorId, int pageSize,int pageIndex,DateOnly? date = null);
     }
 }

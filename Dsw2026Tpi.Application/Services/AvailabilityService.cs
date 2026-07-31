@@ -143,6 +143,28 @@ namespace Dsw2026Tpi.Application.Services
 
             return cantidad;
         }
+        public async Task<Pagination<AvailabilityModel.SlotResponse>> GetAvailableSlots(Guid doctorId,int pageSize,int pageIndex,DateOnly? date = null)
+        {
+            await GetActiveDoctorOrThrow(doctorId);
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            return (await _persistence.Paginate<AvailabilitySlot, DateOnly>(
+                pageSize,
+                pageIndex,
+                s => s.AvailabilityRule.DoctorId == doctorId &&
+                     s.Status == SlotStatus.AVAILABLE &&
+                     s.SlotDate >= today &&
+                     !s.Deleted &&
+                     (date == null || s.SlotDate == date),
+                s => s.SlotDate,
+                nameof(AvailabilitySlot.AvailabilityRule)))
+            .Map(s => new AvailabilityModel.SlotResponse(
+                s.Id,
+                s.SlotDate,
+                s.StartTime,
+                s.EndTime));
+        }
     }
     
 }

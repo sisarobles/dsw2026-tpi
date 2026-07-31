@@ -34,5 +34,15 @@ namespace Dsw2026Tpi.Api.Controllers
             await _service.UpdateAvailability(request);
             return Ok();
         }
+
+        [HttpGet("{doctorId}/slots")]
+        [Authorize(Policy = Policies.PatientPolicy)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAvailableSlots([FromRoute] Guid doctorId, [FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 1,
+        [FromQuery] DateOnly? date = null)
+        {
+            var result = await _service.GetAvailableSlots(doctorId, pageSize, pageIndex, date);
+            return Ok(result);
+        }
     }
 }
