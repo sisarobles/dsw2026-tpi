@@ -12,7 +12,6 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        // Inicializar con un logger simple antes de construir el host
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
             .CreateBootstrapLogger();
@@ -23,7 +22,6 @@ public class Program
 
             var builder = WebApplication.CreateBuilder(args);
 
-            //Configuraciones personalizadas
             builder.AddSerilogConfiguration();
             builder.Services.AddAppIdentity();
             builder.Services.AddAppAuthentication(builder.Configuration);
@@ -40,9 +38,7 @@ public class Program
 
 
             var app = builder.Build();
-           
 
-            // --- Seed inicial del Admin ---
             using (var scope = app.Services.CreateScope())
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -92,20 +88,20 @@ public class Program
 
             if (app.Environment.IsProduction())
             {
-                app.UseHttpsRedirection(); //en producción, fuerza HTTPS
+                app.UseHttpsRedirection(); 
             }
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger(); //permite el uso del swagger
+                app.UseSwagger(); 
                 app.UseSwaggerUI(); 
             }
 
             app.UseCors();
-            app.UseAuthentication(); //lee el header de autorización (Bearer <token>) y arma el usuario con los claims que tengamos definidos
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseRateLimiter(); 
           
-            app.MapControllers(); //permite que se ingrese a buscar qué controlador o método atiende la ruta solicitada
+            app.MapControllers(); 
             app.MapHealthChecks("/health-check");
 
             Log.Information("Aplicación iniciada correctamente");

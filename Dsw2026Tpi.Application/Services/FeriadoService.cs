@@ -14,7 +14,6 @@ public class FeriadoService : IFeriadoService
     private readonly Dictionary<DateOnly, FeriadoInfo> _feriados;
     public FeriadoService()
     {
-        // Ajustar la ruta según dónde termine ubicado el archivo en el proyecto Api
         var path = Path.Combine(AppContext.BaseDirectory, "Sources", "feriados.json");
 
         if (!File.Exists(path))

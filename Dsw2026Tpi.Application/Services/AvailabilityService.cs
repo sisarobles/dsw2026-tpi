@@ -22,10 +22,8 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task<IEnumerable<AvailabilityModel.Response>> CreateAvailability(AvailabilityModel.Request request)
         {
-            //Verifico la existencia del doctor
             await GetActiveDoctorOrThrow(request.DoctorId);
 
-            //Obtengo fecha actual
             var now = DateTime.UtcNow;
             var response = await CreateRulesAndSlots(request, now.Month, now.Year,
             DateOnly.FromDateTime(now),
@@ -115,11 +113,10 @@ namespace Dsw2026Tpi.Application.Services
                 await _persistence.Add(rule);
 
                 response.Add(new AvailabilityModel.Response(
-    rule.Id,
-    rule.DayOfWeek.ToSpanish(),
-    rule.StartTime,
-    rule.EndTime
-));
+                rule.Id,
+                rule.DayOfWeek.ToSpanish(),
+                rule.StartTime,
+                rule.EndTime));
 
                 foreach (var slot in slots)
                 {
