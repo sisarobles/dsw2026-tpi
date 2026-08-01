@@ -11,7 +11,7 @@ namespace Dsw2026Tpi.Api.Controllers
     [ApiController]
     public class AvailabilityController : AppController
     {
-        private IAvailabilityService _service;
+        private readonly IAvailabilityService _service;
 
         public AvailabilityController(IAvailabilityService service)
         {
@@ -29,7 +29,7 @@ namespace Dsw2026Tpi.Api.Controllers
 
         [HttpPut]
         [Authorize(Policy = Policies.AdminPolicy)]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateAvailability([FromBody] AvailabilityModel.Request request)
         {
             var response = await _service.UpdateAvailability(request);
