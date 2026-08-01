@@ -90,6 +90,7 @@ namespace Dsw2026Tpi.Application.Services
             {
                 try
                 {
+                    dayRequest.ValidateTimeRange();
                     await dayRequest.ValidateNoOverlap(_persistence, request.DoctorId, month, year);
                 }
                 catch (BusinessRuleException)
@@ -99,11 +100,14 @@ namespace Dsw2026Tpi.Application.Services
                     accion: "CreateAvailability",
                     detalle: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
                     nivel: LogNivel.Warning);
+                    throw;
                 }
+
+                var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
 
                 var rule = new AvailabilityRule(
                     request.DoctorId, month, year,
-                    dayRequest.Day, dayRequest.StartTime, dayRequest.EndTime);
+                   dayOfWeek, dayRequest.StartTime, dayRequest.EndTime);
 
                 var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year, _feriadoService);
 

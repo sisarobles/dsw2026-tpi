@@ -23,11 +23,13 @@ namespace Dsw2026Tpi.Application.Extensions
             int month,
             int year)
         {
+            var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
+
             var rulesOfTheDay = await persistence.GetFiltered<AvailabilityRule>(
                 r => r.DoctorId == doctorId &&
                      r.Month == month &&
                      r.Year == year &&
-                     r.DayOfWeek == dayRequest.Day &&
+                     r.DayOfWeek == dayOfWeek &&
                      !r.Deleted);
 
             var haySolapamiento = rulesOfTheDay.Any(r =>
