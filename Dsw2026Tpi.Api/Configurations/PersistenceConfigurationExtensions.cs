@@ -17,7 +17,7 @@ public static class PersistenceConfigurationExtensions
         //Agregar contexto (O/RM) y utilizar SQL Server para DB
         services.AddDbContext<Dsw2026TpiDbContext>(options =>
         {
-            options.UseSqlite(connectionString);
+           options.UseSqlite(connectionString);
         });
 
         services.AddDbContext<AuthenticationDbContext>(options =>

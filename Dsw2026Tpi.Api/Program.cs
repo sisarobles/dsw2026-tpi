@@ -92,9 +92,6 @@ public class Program
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();
 
-
-           
-
             if (app.Environment.IsProduction())
             {
                 app.UseHttpsRedirection(); //en producción, fuerza HTTPS
@@ -105,16 +102,11 @@ public class Program
                 app.UseSwaggerUI(); 
             }
 
-
-
             app.UseCors();
             app.UseAuthentication(); //lee el header de autorización (Bearer <token>) y arma el usuario con los claims que tengamos definidos
             app.UseAuthorization();
             app.UseRateLimiter(); 
           
-
-
-
             app.MapControllers(); //permite que se ingrese a buscar qué controlador o método atiende la ruta solicitada
             app.MapHealthChecks("/health-check");
 
