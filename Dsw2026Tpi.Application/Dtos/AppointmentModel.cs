@@ -10,8 +10,9 @@ namespace Dsw2026Tpi.Application.Dtos
     {
         public record Request(Guid DoctorId, Guid AvailabilityId, PatientRequest? Patient, string Reason);
         public record PatientRequest(long Dni);
-        public record Response(Guid Id, string Status);
-
+        public record Response(Guid Id, string Status, string Reason, PatientSummary Patient, AvailabilitySlotSummary AvailabilitySlot);
+        public record PatientSummary(Guid Id, long Dni, string FullName);
+        public record AvailabilitySlotSummary(Guid Id, string Status, DateOnly SlotDate, TimeOnly StartTime, TimeOnly EndTime);
     }
     public record AppointmentSummaryModel
     {
