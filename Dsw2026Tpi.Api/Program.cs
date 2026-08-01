@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
+using System.Text.Json.Serialization;
 
 namespace Dsw2026Tpi.Api;
 
@@ -30,9 +31,12 @@ public class Program
             builder.Services.AddAppAuthentication(builder.Configuration);
             builder.Services.AddSwaggerConfiguration();
             builder.Services.AddApplicationPersistence(builder.Configuration);
-            builder.Services.AddAppCors(builder.Configuration);
+            builder.Services.AddAppCors(builder.Configuration, builder.Environment);
             builder.Services.AddAppDependencies();
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
             builder.Services.AddHealthChecks();
             builder.Services.AddAppRateLimiting(builder.Configuration);
 
