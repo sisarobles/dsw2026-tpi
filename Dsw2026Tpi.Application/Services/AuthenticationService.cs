@@ -39,7 +39,8 @@ public class AuthenticationService : IAuthenticationService
         _persistence = persistence;
         _logService = logService;
     }
-
+    //traer el usuario paciente, hacer que el paciente sea un usuario de identity, validación del dni.
+    //crear una clase paciente que herede de identity??
     public async Task<LoginAdminModel.Response> LoginAdmin(LoginAdminModel.Request request)
     {
         if (!request.Email.IsEmailValid()) 

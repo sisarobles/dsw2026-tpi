@@ -41,5 +41,5 @@ namespace Dsw2026Tpi.Application.Extensions
                     .WithDetail("days", "schedule_overlap_detected");
         }
     
-}
+    }
 }

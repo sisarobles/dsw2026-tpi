@@ -42,7 +42,7 @@ namespace Dsw2026Tpi.Application.Services
             return response;
         }
 
-        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
+        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) //Devolver Paginate CREO 
         {
             await GetActiveDoctorOrThrow(doctorId);
 

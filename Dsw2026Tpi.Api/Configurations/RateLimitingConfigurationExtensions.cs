@@ -86,7 +86,7 @@ namespace Dsw2026Tpi.Api.Configurations
 
                 return services;
             }
-        }
-
     }
+
+}
 
