@@ -30,16 +30,16 @@ namespace Dsw2026Tpi.Application.Services
 
             //Obtengo fecha actual
             var now = DateTime.UtcNow;
-            var totalSlots = await CreateRulesAndSlots(request, now.Month, now.Year,
+            var response = await CreateRulesAndSlots(request, now.Month, now.Year,
             DateOnly.FromDateTime(now),
             DateTime.DaysInMonth(now.Year, now.Month));
 
             await _logger.RegistrarAsync(
             modulo: "Availability",
             accion: "CreateAvailability",
-            detalle: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s), {totalSlots} slot(s) generados para {now.Month}/{now.Year}");
+            detalle: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s)");
 
-            return await GetAvailabilitiesByDoctor(request.DoctorId);
+            return response;
         }
 
         public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
@@ -69,7 +69,7 @@ namespace Dsw2026Tpi.Application.Services
             var now = DateTime.UtcNow;
             var reglasBorradas = await DeleteExistingRules(request.DoctorId, now.Month, now.Year);
 
-            var totalSlots = await CreateRulesAndSlots(
+            var response = await CreateRulesAndSlots(
                 request, now.Month, now.Year,
                 DateOnly.FromDateTime(now),
                 DateTime.DaysInMonth(now.Year, now.Month));
@@ -77,14 +77,14 @@ namespace Dsw2026Tpi.Application.Services
             await _logger.RegistrarAsync(
             modulo: "Availability",
             accion: "UpdateAvailability",
-            detalle: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s), {totalSlots} slot(s) generados para {now.Month}/{now.Year}");
+            detalle: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s)");
 
-            return await GetAvailabilitiesByDoctor(request.DoctorId);
+            return response;
         }
 
-        private async Task<int> CreateRulesAndSlots(AvailabilityModel.Request request,int month,int year, DateOnly today,int daysInMonth)
+        private async Task<List<AvailabilityModel.Response>> CreateRulesAndSlots(AvailabilityModel.Request request,int month,int year, DateOnly today,int daysInMonth)
         {
-            var totalSlots = 0;
+            var response = new List<AvailabilityModel.Response>();
 
             foreach (var dayRequest in request.Days)
             {
@@ -99,11 +99,14 @@ namespace Dsw2026Tpi.Application.Services
                     accion: "CreateAvailability",
                     detalle: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
                     nivel: LogNivel.Warning);
+                    throw; 
                 }
+
+                var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
 
                 var rule = new AvailabilityRule(
                     request.DoctorId, month, year,
-                    dayRequest.Day, dayRequest.StartTime, dayRequest.EndTime);
+                    dayOfWeek, dayRequest.StartTime, dayRequest.EndTime);
 
                 var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year, _feriadoService);
 
@@ -114,14 +117,21 @@ namespace Dsw2026Tpi.Application.Services
 
                 await _persistence.Add(rule);
 
+                response.Add(new AvailabilityModel.Response(
+    rule.Id,
+    rule.DayOfWeek.ToSpanish(),
+    rule.StartTime,
+    rule.EndTime
+));
+
                 foreach (var slot in slots)
                 {
                     await _persistence.Add(slot);
-                    totalSlots++;
+                 
                 }
             }
 
-            return totalSlots;
+            return response;
         }
         private async Task<Doctor> GetActiveDoctorOrThrow(Guid doctorId)
         {
