@@ -1,6 +1,6 @@
 ﻿using Dsw2026Tpi.Data.Options;
-using Dsw2026Tpi.Application.Interfaces;
 using System.Text.Json;
+using Dsw2026Tpi.Domain.Interfaces;
 
 namespace Dsw2026Tpi.Application.Services;
 
