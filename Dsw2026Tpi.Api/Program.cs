@@ -31,7 +31,7 @@ public class Program
             builder.Services.AddAppAuthentication(builder.Configuration);
             builder.Services.AddSwaggerConfiguration();
             builder.Services.AddApplicationPersistence(builder.Configuration);
-            builder.Services.AddAppCors(builder.Configuration, builder.);
+            builder.Services.AddAppCors(builder.Configuration, builder.Environment);
             builder.Services.AddAppDependencies();
             builder.Services.AddControllers().AddJsonOptions(options =>
             {

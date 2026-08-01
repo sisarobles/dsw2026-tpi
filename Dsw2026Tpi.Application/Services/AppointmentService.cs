@@ -26,13 +26,14 @@ namespace Dsw2026Tpi.Application.Services
         public async Task<AppointmentModel.Response> CreateAppointment(AppointmentModel.Request request)
         {
             request.Reason.ValidateReason();
+            request.Patient.ValidatePatient();
 
-            var slot = await _persistence.GetById<AvailabilitySlot>(request.AvailabilityId, nameof(AvailabilitySlot.AvailabilityRule))
+            var slot = await _persistence.GetById<AvailabilitySlot>(request.AvailabilitySlotId, nameof(AvailabilitySlot.AvailabilityRule))
                        ?? throw new EntityNotFoundException(nameof(AvailabilitySlot));
 
             slot.ValidateSlotForBooking(request.DoctorId);
 
-            var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni)
+            var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient!.Dni)
                 ?? throw new EntityNotFoundException(nameof(Patient));
             var patientId = patient.Id; 
 

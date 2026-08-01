@@ -41,7 +41,7 @@ namespace Dsw2026Tpi.Api.Controllers
         public async Task<IActionResult> DeleteAppointment([FromRoute] Guid id)
         {
             await _service.DeleteAppointment(id);
-            return Ok();
+            return Ok("ok");
         }
 
         [HttpGet("search")]
