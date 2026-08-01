@@ -48,6 +48,21 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             await _persistence.Received(1).Update(appointment);
             await _persistence.Received(1).Update(slot);
         }
+        [Fact]
+        public async Task DeleteAppointment_CuandoElTurnoNoExiste_LanzaEntityNotFoundException()
+        {
+            // Arrange
+            var idInexistente = Guid.NewGuid();
+
+           _persistence.GetById<Appointment>(idInexistente, Arg.Any<string[]>())
+           .Returns((Appointment?)null);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<EntityNotFoundException>(
+                () => _service.DeleteAppointment(idInexistente));
+
+            await _persistence.DidNotReceive().Update(Arg.Any<Appointment>());
+        }
 
         //appointment.AvailabilitySlot tiene set privado, así que en el test lo seteamos aquí para simular 
         private static void SetAvailabilitySlot(Appointment appointment, AvailabilitySlot slot)
