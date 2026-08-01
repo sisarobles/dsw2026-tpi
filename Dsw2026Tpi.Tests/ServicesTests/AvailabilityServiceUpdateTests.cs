@@ -68,5 +68,54 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             Assert.NotEmpty(response);
             Assert.Single(response);
         }
+    
+
+    [Fact]
+        public async Task UpdateAvailability_CuandoHaySlotsReservados_LanzaExcepcion()
+        {
+            // Arrange
+            var doctorId = Guid.NewGuid();
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+
+            var reglaExistente = new AvailabilityRule(
+                doctorId,
+                DateTime.UtcNow.Month,
+                DateTime.UtcNow.Year,
+                DayOfWeek.Monday,
+                new TimeOnly(9, 0),
+                new TimeOnly(12, 0));
+
+            var request = new AvailabilityModel.Request(
+                doctorId,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new("Lunes", new TimeOnly(14, 0), new TimeOnly(16, 0))
+                });
+
+           
+            _persistence.GetById<Doctor>(doctorId).Returns(doctor);
+
+            
+            _persistence.GetFiltered<AvailabilityRule>(Arg.Any<Expression<Func<AvailabilityRule, bool>>>())
+                .Returns(new List<AvailabilityRule> { reglaExistente });
+
+            
+            var slotReservado = new AvailabilitySlot(
+                reglaExistente.Id,
+                DateOnly.FromDateTime(DateTime.UtcNow),
+                new TimeOnly(9, 0),
+                new TimeOnly(9, 30));
+            slotReservado.Book(); 
+
+            _persistence.GetFiltered<AvailabilitySlot>(Arg.Any<Expression<Func<AvailabilitySlot, bool>>>())
+                .Returns(new List<AvailabilitySlot> { slotReservado });
+
+            var service = CreateService();
+
+            // Act & Assert
+            await Assert.ThrowsAnyAsync<Exception>(() => service.UpdateAvailability(request));
+            await _persistence.DidNotReceiveWithAnyArgs().Delete(Arg.Any<AvailabilityRule>());
+            await _persistence.DidNotReceiveWithAnyArgs().Add(Arg.Any<AvailabilityRule>());
+        }
     }
 }
