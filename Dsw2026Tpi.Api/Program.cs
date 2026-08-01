@@ -30,7 +30,7 @@ public class Program
             builder.Services.AddAppAuthentication(builder.Configuration);
             builder.Services.AddSwaggerConfiguration();
             builder.Services.AddApplicationPersistence(builder.Configuration);
-            builder.Services.AddAppCors(builder.Configuration);
+            builder.Services.AddAppCors(builder.Configuration, builder.);
             builder.Services.AddAppDependencies();
             builder.Services.AddControllers();
             builder.Services.AddHealthChecks();

@@ -39,5 +39,5 @@ namespace Dsw2026Tpi.Application.Extensions
                 throw new BusinessRuleException(ErrorCodes.AVAILABILITY_OVERLAP, nameof(ErrorCodes.AVAILABILITY_OVERLAP));
         }
     
-}
+    }
 }

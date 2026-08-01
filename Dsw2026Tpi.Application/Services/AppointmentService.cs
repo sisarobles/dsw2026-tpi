@@ -48,7 +48,7 @@ namespace Dsw2026Tpi.Application.Services
                         accion: "CreateAppointment",
                         detalle: $"Cita {appointment.Id} registrada para el paciente {patientId}, slot {slot.Id}");
 
-                return appointment.ToResponse();
+                return appointment.ToResponse(patient, slot);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -63,7 +63,7 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task DeleteAppointment(Guid idAppointment)
         {
-            var appointment = await _persistence.GetById<Appointment>(idAppointment, nameof(Appointment.AvailabilitySlot)) //NO SÉ ESTO DEL NAMEOF
+            var appointment = await _persistence.GetById<Appointment>(idAppointment, nameof(Appointment.AvailabilitySlot)) 
                 ?? throw new EntityNotFoundException(nameof(Appointment));
             appointment.Cancel();
             appointment.AvailabilitySlot!.Release();
@@ -77,7 +77,7 @@ namespace Dsw2026Tpi.Application.Services
 
         }
 
-        public async Task<IEnumerable<AppointmentSummaryModel.Response>> GetAppointmentByDni(long dni)
+        public async Task<IEnumerable<AppointmentSummaryModel.Response>> GetAppointmentByDni(long dni) 
         {
             var patient = await _persistence.First<Patient>(p => p.Dni == dni)
                 ?? throw new EntityNotFoundException(nameof(Patient));
@@ -93,6 +93,12 @@ namespace Dsw2026Tpi.Application.Services
                 request.ToSearchPredicate(),
                 a => a.AvailabilitySlot!.SlotDate,
                 AppointmentQueryExtensions.SearchIncludes
+            );
+
+            await _logger.RegistrarAsync(
+                modulo: "Appointments",
+                accion: "GetAppointmentBySearch",
+                detalle: $"Búsqueda de citas realizada. Filtros: SpecialtyId={request.SpecialtyId}, DoctorId={request.DoctorId}, PatientDni={request.PatientDni}, Date={request.Date}. Página {pageIndex}, tamaño {pageSize}"
             );
 
             return appointments.Map(a => a.ToSearchResponse());

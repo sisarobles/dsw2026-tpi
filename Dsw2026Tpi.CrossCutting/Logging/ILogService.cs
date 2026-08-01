@@ -7,7 +7,6 @@ namespace Dsw2026Tpi.CrossCutting.Logging
 {
     public interface ILogService
     {
-
         Task RegistrarAsync(
             string modulo,
             string accion,
