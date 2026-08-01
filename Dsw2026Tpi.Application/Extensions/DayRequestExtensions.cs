@@ -14,13 +14,14 @@ namespace Dsw2026Tpi.Application.Extensions
             int month,
             int year, IFeriadoService feriadoService)
         {
+            var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
             var slots = new List<AvailabilitySlot>();
 
             for (int day = 1; day <= daysInMonth; day++)
             {
                 var date = new DateOnly(year, month, day);
 
-                if (date.DayOfWeek == dayRequest.Day && date >= today && !feriadoService.EsFeriado(date))
+                if (date.DayOfWeek == dayOfWeek && date >= today && !feriadoService.EsFeriado(date))
                 {
                     var current = dayRequest.StartTime;
 
