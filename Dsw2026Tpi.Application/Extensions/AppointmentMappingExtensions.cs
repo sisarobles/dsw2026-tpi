@@ -32,7 +32,6 @@ namespace Dsw2026Tpi.Application.Extensions
                 )
             );
         }
-
         public static AppointmentSummaryModel.Response ToSummaryResponse(this Appointment appointment)
         {
             return new AppointmentSummaryModel.Response(

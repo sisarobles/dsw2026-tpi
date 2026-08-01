@@ -18,7 +18,6 @@ public class SpecialitiesController : AppController
         _specialityService = specialityService;
     }
 
-    // Petición GET: Devuelve la lista de especialidades
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int pageSize, [FromQuery] int pageIndex, [FromQuery] string? name = null)
     {
@@ -26,7 +25,6 @@ public class SpecialitiesController : AppController
         return Ok(specialities);
     }
 
-    // Petición POST: Crea una nueva especialidad
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] SpecialityModel.Request request)
     {
