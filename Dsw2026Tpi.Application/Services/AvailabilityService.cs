@@ -5,9 +5,6 @@ using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
-using Microsoft.Extensions.Logging;
-using static Dsw2026Tpi.Application.Dtos.AvailabilityModel;
-
 
 namespace Dsw2026Tpi.Application.Services
 {
