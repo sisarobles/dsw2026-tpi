@@ -12,6 +12,8 @@ namespace Dsw2026Tpi.Data.Configurations
         public void Configure(EntityTypeBuilder<AvailabilitySlot> builder)
         {
             builder.ToTable("AvailabilitySlots");
+            builder.HasIndex(s => new { s.AvailabilityRuleId, s.SlotDate, s.StartTime })
+            .IsUnique();
         }
     }
 }
