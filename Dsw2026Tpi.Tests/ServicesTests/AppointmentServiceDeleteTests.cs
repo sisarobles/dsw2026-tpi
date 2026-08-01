@@ -39,10 +39,10 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             _persistence.GetById<Appointment>(appointment.Id, Arg.Any<string[]>())
                 .Returns(appointment);
 
-            // Act
+            //Act
             await _service.DeleteAppointment(appointment.Id);
 
-            // Assert
+            //Assert
             Assert.Equal(Estado.CANCELLED, appointment.Estado);
             Assert.Equal(SlotStatus.AVAILABLE, slot.Status);
             await _persistence.Received(1).Update(appointment);
@@ -51,13 +51,13 @@ namespace Dsw2026Tpi.Tests.ServicesTests
         [Fact]
         public async Task DeleteAppointment_CuandoElTurnoNoExiste_LanzaEntityNotFoundException()
         {
-            // Arrange
+            //Arrange
             var idInexistente = Guid.NewGuid();
 
            _persistence.GetById<Appointment>(idInexistente, Arg.Any<string[]>())
            .Returns((Appointment?)null);
 
-            // Act & Assert
+            //Act & Assert
             await Assert.ThrowsAsync<EntityNotFoundException>(
                 () => _service.DeleteAppointment(idInexistente));
 
