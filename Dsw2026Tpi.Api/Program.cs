@@ -41,50 +41,8 @@ public class Program
 
             var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            await app.SeedDatabaseAsync();
 
-                if (!await roleManager.RoleExistsAsync(Roles.Administrator))
-                {
-                    await roleManager.CreateAsync(new IdentityRole(Roles.Administrator));
-                }
-                if (!await roleManager.RoleExistsAsync(Roles.Patient))
-                {
-                    await roleManager.CreateAsync(new IdentityRole(Roles.Patient));
-                }
-
-                var adminEmail = builder.Configuration["AdminSeed:Email"] ?? "admin@system.com";
-                var adminPassword = builder.Configuration["AdminSeed:Password"] ?? "Admin12345";
-
-                var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
-                if (existingAdmin is null)
-                {
-                    var now = DateTime.UtcNow;
-                    var adminUser = new ApplicationUser
-                    {
-                        UserName = adminEmail,
-                        Email = adminEmail,
-                        EmailConfirmed = true,
-                        CreatedAt = now,
-                        UpdatedAt = now
-                    };
-
-                    var result = await userManager.CreateAsync(adminUser, adminPassword);
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(adminUser, Roles.Administrator);
-                        Log.Information("Admin inicial creado: {Email}", adminEmail);
-                    }
-                    else
-                    {
-                        Log.Error("Error creando admin inicial: {Errors}",
-                            string.Join(", ", result.Errors.Select(e => e.Description)));
-                    }
-                }
-            }
-          
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();
 
