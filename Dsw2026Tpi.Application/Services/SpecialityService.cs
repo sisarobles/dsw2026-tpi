@@ -1,14 +1,9 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Application.Extensions;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
-using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -23,11 +18,7 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<SpecialityModel.Response> CreateAsync(SpecialityModel.Request request)
         {
-            if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length < 3 || request.Name.Length > 100)
-                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
-
-            if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length < 10 || request.Description.Length > 100)
-                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
+            request.Validate();
 
             var speciality = new Speciality(request.Name, request.Description);
             await _persistence.Add(speciality);
@@ -58,11 +49,7 @@ namespace Dsw2026Tpi.Application.Services
             var speciality = await _persistence.GetById<Speciality>(id)
                 ?? throw new EntityNotFoundException(nameof(Speciality));
 
-            if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length < 3 || request.Name.Length > 100)
-                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
-
-            if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length < 10 || request.Description.Length > 100)
-                throw new ValidationException(ErrorCodes.VALIDATION_ERROR, nameof(ErrorCodes.VALIDATION_ERROR));
+            request.Validate();
 
             speciality.Update(request.Name, request.Description);
             await _persistence.Update(speciality);

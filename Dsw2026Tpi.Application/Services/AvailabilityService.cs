@@ -5,9 +5,6 @@ using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
-using Microsoft.Extensions.Logging;
-using static Dsw2026Tpi.Application.Dtos.AvailabilityModel;
-
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -25,10 +22,8 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task<IEnumerable<AvailabilityModel.Response>> CreateAvailability(AvailabilityModel.Request request)
         {
-            //Verifico la existencia del doctor
             await GetActiveDoctorOrThrow(request.DoctorId);
 
-            //Obtengo fecha actual
             var now = DateTime.UtcNow;
             var response = await CreateRulesAndSlots(request, now.Month, now.Year,
             DateOnly.FromDateTime(now),
@@ -88,9 +83,10 @@ namespace Dsw2026Tpi.Application.Services
 
             foreach (var dayRequest in request.Days)
             {
+                dayRequest.ValidateTimeRange();
+
                 try
                 {
-                    dayRequest.ValidateTimeRange();
                     await dayRequest.ValidateNoOverlap(_persistence, request.DoctorId, month, year);
                 }
                 catch (BusinessRuleException)
@@ -100,30 +96,35 @@ namespace Dsw2026Tpi.Application.Services
                     accion: "CreateAvailability",
                     detalle: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
                     nivel: LogNivel.Warning);
-                    throw;
+                    throw; 
                 }
 
                 var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
 
                 var rule = new AvailabilityRule(
                     request.DoctorId, month, year,
-                   dayOfWeek, dayRequest.StartTime, dayRequest.EndTime);
+                    dayOfWeek, dayRequest.StartTime, dayRequest.EndTime);
 
                 var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year, _feriadoService);
 
                 if (!slots.Any())
+                {
                     continue;
-               
-                await _persistence.Add(rule);
+                }
 
-                foreach (var slot in slots)
-                    await _persistence.Add(slot);
+                await _persistence.Add(rule);
 
                 response.Add(new AvailabilityModel.Response(
                 rule.Id,
                 rule.DayOfWeek.ToSpanish(),
                 rule.StartTime,
                 rule.EndTime));
+
+                foreach (var slot in slots)
+                {
+                    await _persistence.Add(slot);
+                 
+                }
             }
 
             return response;
@@ -164,6 +165,7 @@ namespace Dsw2026Tpi.Application.Services
 
             return cantidad;
         }
+
         public async Task<Pagination<AvailabilityModel.SlotResponse>> GetAvailableSlots(Guid doctorId,int pageSize,int pageIndex,DateOnly? date = null)
         {
             await GetActiveDoctorOrThrow(doctorId);

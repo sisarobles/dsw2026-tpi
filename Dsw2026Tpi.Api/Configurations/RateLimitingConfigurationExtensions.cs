@@ -41,7 +41,6 @@ namespace Dsw2026Tpi.Api.Configurations
                         await context.HttpContext.Response.WriteAsJsonAsync(errorResponse, token);
                     };
 
-                    // Admin login — 5 req/min por IP
                     options.AddFixedWindowLimiter("AdminAuthPolicy", opt =>
                     {
                         opt.PermitLimit = adminLimit;
@@ -49,7 +48,6 @@ namespace Dsw2026Tpi.Api.Configurations
                         opt.QueueLimit = 0;
                     });
 
-                    // Patient login — 10 req/min por IP
                     options.AddFixedWindowLimiter("PatientAuthPolicy", opt =>
                     {
                         opt.PermitLimit = patientLimit;
@@ -57,7 +55,6 @@ namespace Dsw2026Tpi.Api.Configurations
                         opt.QueueLimit = 0;
                     });
 
-                    // Appointments — 5 req/min por usuario autenticado
                     options.AddPolicy<string>("AppointmentPolicy", httpContext =>
     RateLimitPartition.GetFixedWindowLimiter(
         partitionKey: httpContext.User.Identity?.Name
@@ -70,7 +67,6 @@ namespace Dsw2026Tpi.Api.Configurations
             QueueLimit = 0
         }));
 
-                    // General — 100 req/min por usuario o IP
                     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                         RateLimitPartition.GetFixedWindowLimiter(
                             partitionKey: httpContext.User.Identity?.Name

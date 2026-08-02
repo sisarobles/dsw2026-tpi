@@ -1,11 +1,9 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Services;
-using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
 using System.Linq.Expressions;
 using Xunit;
 namespace Dsw2026Tpi.Tests.ServicesTests
@@ -21,7 +19,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
         [Fact]
         public async Task UpdateAvailability_CuandoNoHaySlotsReservados_SobreescribeElMes()
         {
-            // Arrange
+            //Arrange
             var doctorId = Guid.NewGuid();
             var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
 
@@ -57,11 +55,11 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             _persistence.Add(Arg.Any<AvailabilitySlot>())
                 .Returns(c => c.Arg<AvailabilitySlot>());
 
-            // Act
+            //Act
             var service = CreateService();
             var response = await service.UpdateAvailability(request);
 
-            // Assert
+            //Assert
             await _persistence.Received(1).Delete(reglaExistente);
             await _persistence.Received(1).Add(Arg.Any<AvailabilityRule>());
             await _persistence.ReceivedWithAnyArgs().Add(Arg.Any<AvailabilitySlot>());
@@ -73,7 +71,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
     [Fact]
         public async Task UpdateAvailability_CuandoHaySlotsReservados_LanzaExcepcion()
         {
-            // Arrange
+            //Arrange
             var doctorId = Guid.NewGuid();
             var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
 
@@ -112,7 +110,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             var service = CreateService();
 
-            // Act & Assert
+            //Act & Assert
             await Assert.ThrowsAnyAsync<Exception>(() => service.UpdateAvailability(request));
             await _persistence.DidNotReceiveWithAnyArgs().Delete(Arg.Any<AvailabilityRule>());
             await _persistence.DidNotReceiveWithAnyArgs().Add(Arg.Any<AvailabilityRule>());

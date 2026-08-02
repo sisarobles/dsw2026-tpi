@@ -1,6 +1,5 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Domain.Entities;
-using System.Threading.Tasks;
 
 namespace Dsw2026Tpi.Application.Interfaces;
 
