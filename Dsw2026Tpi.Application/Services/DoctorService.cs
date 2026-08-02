@@ -51,7 +51,7 @@ public class DoctorService : IDoctorService
             ?? throw new EntityNotFoundException(nameof(Speciality));
 
         if (!speciality.IsActive)
-            throw new EntityNotFoundException(nameof(Speciality)); // punto 11
+            throw new EntityNotFoundException(nameof(Speciality)); 
 
         doctor.Update(request.Name, request.LicenseNumber, request.SpecialtyId);
         await _persistence.Update(doctor);

@@ -31,7 +31,6 @@ namespace Dsw2026Tpi.Domain.Entities
             Deleted = false;
         }
     
-        //Método para reservar un turno
         public void Book()
         {
             if (Status != SlotStatus.AVAILABLE)
@@ -39,7 +38,6 @@ namespace Dsw2026Tpi.Domain.Entities
             Status = SlotStatus.BOOKED;
         }
 
-        //Método para liberar un turno
         public void Release()
         {
             if (Status != SlotStatus.BOOKED)

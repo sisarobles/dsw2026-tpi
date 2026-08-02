@@ -37,7 +37,7 @@ namespace Dsw2026Tpi.Application.Services
             return response;
         }
 
-        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) //Devolver Paginate CREO 
+        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
         {
             await GetActiveDoctorOrThrow(doctorId);
 
@@ -83,6 +83,8 @@ namespace Dsw2026Tpi.Application.Services
 
             foreach (var dayRequest in request.Days)
             {
+                dayRequest.ValidateTimeRange();
+
                 try
                 {
                     await dayRequest.ValidateNoOverlap(_persistence, request.DoctorId, month, year);

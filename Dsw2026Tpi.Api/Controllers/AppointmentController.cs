@@ -45,9 +45,9 @@ namespace Dsw2026Tpi.Api.Controllers
 
         [HttpGet("search")]
         [Authorize(Policy = Policies.AdminPolicy)]
-        public async Task<IActionResult> GetAppointmentBySearch([FromQuery] int pageSize, [FromQuery] int pageIndex,
-                                                                [FromQuery] Guid? specialtyId, [FromQuery] Guid? doctorId,
-                                                                [FromQuery] long? dni, [FromQuery] DateOnly? date) {
+        public async Task<IActionResult> GetAppointmentBySearch([FromQuery] Guid? specialtyId = null, [FromQuery] Guid? doctorId = null,
+                                                                [FromQuery] long? dni = null, [FromQuery] DateOnly? date = null, 
+                                                                [FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 1) {
             var request = new AppointmentSearchModel.Request(specialtyId, doctorId, dni, date);
             var result = await _service.GetAppointmentBySearch(request, pageSize, pageIndex);
             return Ok(result);
@@ -55,7 +55,7 @@ namespace Dsw2026Tpi.Api.Controllers
 
         [HttpGet]
         [Authorize(Policy = Policies.AdminPolicy)]
-        public async Task<IActionResult> GetAppointmentsByDate([FromQuery] DateOnly date, [FromQuery] int pageSize, [FromQuery] int pageIndex)
+        public async Task<IActionResult> GetAppointmentsByDate([FromQuery] DateOnly date, [FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 1)
         {
             var request = new AppointmentSearchModel.Request(null, null, null, date);
             var result = await _service.GetAppointmentBySearch(request, pageSize, pageIndex);

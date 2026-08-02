@@ -24,6 +24,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
         [Fact]
         public async Task DeleteAppointment_CuandoElTurnoEstaReservado_LoCancelaYLiberaElSlot()
         {
+            //Arrange
             var slot = new AvailabilitySlot(
                 availabilityRuleId: Guid.NewGuid(),
                 slotDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),

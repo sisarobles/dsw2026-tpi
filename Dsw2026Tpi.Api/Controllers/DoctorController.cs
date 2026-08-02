@@ -21,7 +21,7 @@ public class DoctorController : AppController
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll([FromQuery]int pageSize, [FromQuery]int pageIndex, [FromQuery]string? name = null)
+    public async Task<IActionResult> GetAll([FromQuery]int pageSize = 10, [FromQuery]int pageIndex = 1, [FromQuery]string? name = null)
     {
         var doctors = await _service.GetAll(pageSize, pageIndex, name);
         return Ok(doctors);
@@ -43,7 +43,6 @@ public class DoctorController : AppController
         return Created(string.Empty, result);
     }
 
-    // Petición DELETE: Recibe un ID en la URL 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
@@ -51,7 +50,7 @@ public class DoctorController : AppController
 
         if (!success)
         {
-            return NotFound(); // Error 404 si el médico no existe
+            return NotFound(); 
         }
 
         return Ok("ok"); 
