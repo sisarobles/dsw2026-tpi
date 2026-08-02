@@ -2,8 +2,6 @@ using Dsw2026Tpi.Api.Configurations;
 using Dsw2026Tpi.Api.Middlewares;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Dsw2026Tpi.Data.Identity;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System.Text.Json.Serialization;

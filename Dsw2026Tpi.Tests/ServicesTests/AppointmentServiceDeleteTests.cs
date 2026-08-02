@@ -4,7 +4,6 @@ using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
 using Xunit;
 
 namespace Dsw2026Tpi.Tests.ServicesTests

@@ -4,7 +4,6 @@ using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 
-
 namespace Dsw2026Tpi.Application.Extensions
 {
     public static class AvailabilityValidationExtensions

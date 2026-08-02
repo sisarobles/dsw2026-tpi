@@ -1,11 +1,9 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Services;
-using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
 using System.Linq.Expressions;
 using Xunit;
 namespace Dsw2026Tpi.Tests.ServicesTests

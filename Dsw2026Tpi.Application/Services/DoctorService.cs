@@ -21,18 +21,18 @@ public class DoctorService : IDoctorService
             (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)), x => x.Name, nameof(Doctor.Speciality));
 
         return doctors.Map(d => new DoctorModel.Response(d.Id, d.Name, d.LicenseNumber, d.IsActive,
-            new DoctorModel.SpecialityDto(d.Speciality?.Id, d.Speciality?.Name)));
+            new DoctorModel.SpecialtyDto(d.Speciality?.Id, d.Speciality?.Name)));
     }
 
     public async Task<DoctorModel.Response> CreateAsync(DoctorModel.Request request)
     {
-        var speciality = await _persistence.GetById<Speciality>(request.SpecialityId)
+        var speciality = await _persistence.GetById<Speciality>(request.SpecialtyId)
             ?? throw new EntityNotFoundException(nameof(Speciality));
 
         if (!speciality.IsActive)
             throw new EntityNotFoundException(nameof(Speciality)); 
 
-        var doctor = new Doctor(request.Name, request.LicenseNumber, request.SpecialityId);
+        var doctor = new Doctor(request.Name, request.LicenseNumber, request.SpecialtyId);
         await _persistence.Add(doctor);
 
         return new DoctorModel.Response(
@@ -40,7 +40,7 @@ public class DoctorService : IDoctorService
             doctor.Name,
             doctor.LicenseNumber,
             doctor.IsActive,
-            new DoctorModel.SpecialityDto(speciality.Id, speciality.Name)
+            new DoctorModel.SpecialtyDto(speciality.Id, speciality.Name)
         );
     }
 
@@ -49,13 +49,13 @@ public class DoctorService : IDoctorService
         var doctor = await _persistence.GetById<Doctor>(id)
             ?? throw new EntityNotFoundException(nameof(Doctor));
 
-        var speciality = await _persistence.GetById<Speciality>(request.SpecialityId)
+        var speciality = await _persistence.GetById<Speciality>(request.SpecialtyId)
             ?? throw new EntityNotFoundException(nameof(Speciality));
 
         if (!speciality.IsActive)
             throw new EntityNotFoundException(nameof(Speciality)); // punto 11
 
-        doctor.Update(request.Name, request.LicenseNumber, request.SpecialityId);
+        doctor.Update(request.Name, request.LicenseNumber, request.SpecialtyId);
         await _persistence.Update(doctor);
 
         return new DoctorModel.Response(
@@ -63,7 +63,7 @@ public class DoctorService : IDoctorService
             doctor.Name,
             doctor.LicenseNumber,
             doctor.IsActive,
-            new DoctorModel.SpecialityDto(speciality.Id, speciality.Name)
+            new DoctorModel.SpecialtyDto(speciality.Id, speciality.Name)
         );
     }
 

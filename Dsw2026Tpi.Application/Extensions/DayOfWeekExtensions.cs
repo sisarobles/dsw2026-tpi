@@ -1,8 +1,5 @@
 ﻿using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.CrossCutting.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Dsw2026Tpi.Application.Extensions
 {
