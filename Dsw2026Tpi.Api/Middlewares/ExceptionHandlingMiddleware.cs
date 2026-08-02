@@ -48,7 +48,7 @@ public class ExceptionHandlingMiddleware
             AuthorizationException => HttpStatusCode.Unauthorized,
             _ => HttpStatusCode.InternalServerError,
         };
-        var result = JsonSerializer.Serialize(error, _jsonOptions); //jsonOptions es para que searializer sea en CamelCase (configurado más arriba)
+        var result = JsonSerializer.Serialize(error, _jsonOptions); 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)status;
         await context.Response.WriteAsync(result);
