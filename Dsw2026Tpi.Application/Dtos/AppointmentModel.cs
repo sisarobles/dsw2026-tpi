@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.NetworkInformation;
-using System.Runtime.ConstrainedExecution;
-using System.Text;
-
-namespace Dsw2026Tpi.Application.Dtos
+﻿namespace Dsw2026Tpi.Application.Dtos
 {
     public record AppointmentModel
     {
@@ -22,7 +16,7 @@ namespace Dsw2026Tpi.Application.Dtos
     public record AppointmentSearchModel
     {
         public record Request(Guid? SpecialtyId, Guid? DoctorId, long? PatientDni, DateOnly? Date);
-        public record Response(string Specialty, string DoctorName, TimeOnly AvailableTime);
+        public record Response(string Specialty, string Doctor, TimeOnly AvailableTime);
     }
 
 }

@@ -9,7 +9,6 @@ using Dsw2026Tpi.Data.Identity;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -19,7 +18,6 @@ public class AuthenticationService : IAuthenticationService
     private readonly ISignInService _signInManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly JwtService _jwtService;
-    private readonly ILogger<AuthenticationService> _logger;
     private readonly IPersistence _persistence;
     private readonly ILogService _logService;
 
@@ -27,7 +25,6 @@ public class AuthenticationService : IAuthenticationService
         ISignInService signInManager,
         RoleManager<IdentityRole> roleManager,
         JwtService jwtService,
-        ILogger<AuthenticationService> logger,
         IPersistence persistence,
         ILogService logService)
     {
@@ -35,12 +32,10 @@ public class AuthenticationService : IAuthenticationService
         _signInManager = signInManager;
         _roleManager = roleManager;
         _jwtService = jwtService;
-        _logger = logger;
         _persistence = persistence;
         _logService = logService;
     }
-    //traer el usuario paciente, hacer que el paciente sea un usuario de identity, validación del dni.
-    //crear una clase paciente que herede de identity??
+ 
     public async Task<LoginAdminModel.Response> LoginAdmin(LoginAdminModel.Request request)
     {
         if (!request.Email.IsEmailValid()) 
@@ -51,8 +46,7 @@ public class AuthenticationService : IAuthenticationService
         var result = await _signInManager.CheckPassword(user, request.Password);
 
         if (!result)
-        {
-            _logger.LogError("Intento de login fallido para: {Email}", request.Email);
+        { 
             await _logService.RegistrarAsync("Auth", "LOGIN_ADMIN_FAILED", $"Intento de login fallido para {request.Email}", LogNivel.Warning);
             throw new AuthenticationException();
         }
@@ -69,7 +63,6 @@ public class AuthenticationService : IAuthenticationService
        
         );
     }
-
     public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Request request)
     {
         if (!request.Email.IsEmailValid()) throw new AuthenticationException();
@@ -81,13 +74,7 @@ public class AuthenticationService : IAuthenticationService
 
         if (user == null)
         {
-            user = new ApplicationUser
-            {
-                UserName = request.Email,
-                Email = request.Email,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            user = CreateApplicationUser(request.Email);
 
             var createResult = await _userManager.CreateAsync(user);
 
@@ -100,8 +87,6 @@ public class AuthenticationService : IAuthenticationService
             var newPatient = new Patient(user.Id, request.Dni);
             await _persistence.Add(newPatient);
 
-            _logger.LogInformation("Paciente auto-registrado: {Email}", request.Email);
-            
             await _logService.RegistrarAsync("Auth", "PATIENT_AUTO_REGISTERED", $"Paciente auto-registrado: {request.Email}");
         }
         else
@@ -127,13 +112,7 @@ public class AuthenticationService : IAuthenticationService
         if (!request.Email.IsEmailValid()) throw new ValidationException(ErrorCodes.REGISTER_USER_INVALID,
             nameof(ErrorCodes.REGISTER_USER_INVALID));
 
-        var user = new ApplicationUser
-        {
-            UserName = request.Email,
-            Email = request.Email,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        var user = CreateApplicationUser(request.Email);
 
         var result = await _userManager.CreateAsync(user, request.Password);
 
@@ -142,9 +121,16 @@ public class AuthenticationService : IAuthenticationService
        
         _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
 
-        _logger.LogInformation("Usuario registrado: {Email}", request.Email);
         await _logService.RegistrarAsync("Auth", "ADMIN_REGISTERED", $"Usuario admin registrado: {request.Email}");
 
         return new RegisterModel.Response(request.Email);
     }
+
+    private static ApplicationUser CreateApplicationUser(string email) => new()
+    {
+        UserName = email,
+        Email = email,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
 }

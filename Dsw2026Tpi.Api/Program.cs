@@ -1,10 +1,5 @@
 using Dsw2026Tpi.Api.Configurations;
 using Dsw2026Tpi.Api.Middlewares;
-using Dsw2026Tpi.CrossCutting.Identity;
-using Dsw2026Tpi.Data.Identity;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System.Text.Json.Serialization;
 
@@ -14,7 +9,6 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        // Inicializar con un logger simple antes de construir el host
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
             .CreateBootstrapLogger();
@@ -25,7 +19,6 @@ public class Program
 
             var builder = WebApplication.CreateBuilder(args);
 
-            //Configuraciones personalizadas
             builder.AddSerilogConfiguration();
             builder.Services.AddAppIdentity();
             builder.Services.AddAppAuthentication(builder.Configuration);
@@ -42,80 +35,28 @@ public class Program
 
 
             var app = builder.Build();
-           
 
-            // --- Seed inicial del Admin ---
-            using (var scope = app.Services.CreateScope())
-            {
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            await app.SeedDatabaseAsync();
 
-                if (!await roleManager.RoleExistsAsync(Roles.Administrator))
-                {
-                    await roleManager.CreateAsync(new IdentityRole(Roles.Administrator));
-                }
-                if (!await roleManager.RoleExistsAsync(Roles.Patient))
-                {
-                    await roleManager.CreateAsync(new IdentityRole(Roles.Patient));
-                }
-
-                var adminEmail = builder.Configuration["AdminSeed:Email"] ?? "admin@system.com";
-                var adminPassword = builder.Configuration["AdminSeed:Password"] ?? "Admin12345";
-
-                var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
-                if (existingAdmin is null)
-                {
-                    var now = DateTime.UtcNow;
-                    var adminUser = new ApplicationUser
-                    {
-                        UserName = adminEmail,
-                        Email = adminEmail,
-                        EmailConfirmed = true,
-                        CreatedAt = now,
-                        UpdatedAt = now
-                    };
-
-                    var result = await userManager.CreateAsync(adminUser, adminPassword);
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(adminUser, Roles.Administrator);
-                        Log.Information("Admin inicial creado: {Email}", adminEmail);
-                    }
-                    else
-                    {
-                        Log.Error("Error creando admin inicial: {Errors}",
-                            string.Join(", ", result.Errors.Select(e => e.Description)));
-                    }
-                }
-            }
-          
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();
 
-
-           
-
             if (app.Environment.IsProduction())
             {
-                app.UseHttpsRedirection(); //en producción, fuerza HTTPS
+                app.UseHttpsRedirection(); 
             }
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger(); //permite el uso del swagger
+                app.UseSwagger(); 
                 app.UseSwaggerUI(); 
             }
 
-
-
             app.UseCors();
-            app.UseAuthentication(); //lee el header de autorización (Bearer <token>) y arma el usuario con los claims que tengamos definidos
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseRateLimiter(); 
           
-
-
-
-            app.MapControllers(); //permite que se ingrese a buscar qué controlador o método atiende la ruta solicitada
+            app.MapControllers(); 
             app.MapHealthChecks("/health-check");
 
             Log.Information("Aplicación iniciada correctamente");

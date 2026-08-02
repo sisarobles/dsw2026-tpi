@@ -4,7 +4,6 @@ using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
 using Xunit;
 
 namespace Dsw2026Tpi.Tests.ServicesTests
@@ -25,6 +24,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
         [Fact]
         public async Task DeleteAppointment_CuandoElTurnoEstaReservado_LoCancelaYLiberaElSlot()
         {
+            //Arrange
             var slot = new AvailabilitySlot(
                 availabilityRuleId: Guid.NewGuid(),
                 slotDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
@@ -34,7 +34,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             slot.Book(); 
 
             var appointment = new Appointment(Guid.NewGuid(), slot.Id, "Control del endpoint delete");
-            SetAvailabilitySlot(appointment, slot); //ver método static abajo
+            SetAvailabilitySlot(appointment, slot); 
 
             _persistence.GetById<Appointment>(appointment.Id, Arg.Any<string[]>())
                 .Returns(appointment);
@@ -63,8 +63,6 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             await _persistence.DidNotReceive().Update(Arg.Any<Appointment>());
         }
-
-        //appointment.AvailabilitySlot tiene set privado, así que en el test lo seteamos aquí para simular 
         private static void SetAvailabilitySlot(Appointment appointment, AvailabilitySlot slot)
         {
             typeof(Appointment)

@@ -44,13 +44,11 @@ public class ExceptionHandlingMiddleware
         {
             ValidationException => HttpStatusCode.BadRequest,
             EntityNotFoundException => HttpStatusCode.NotFound,
-            // consultar al profe si AuthenticationException debería devolver 401 (Unauthorized) 
-            // en vez de 409 (Conflict), que es el estándar HTTP para credenciales inválidas
             ConflictException or AuthenticationException => HttpStatusCode.Conflict,
             AuthorizationException => HttpStatusCode.Unauthorized,
             _ => HttpStatusCode.InternalServerError,
         };
-        var result = JsonSerializer.Serialize(error, _jsonOptions); //jsonOptions es para que searializer sea en CamelCase (configurado más arriba)
+        var result = JsonSerializer.Serialize(error, _jsonOptions); 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)status;
         await context.Response.WriteAsync(result);

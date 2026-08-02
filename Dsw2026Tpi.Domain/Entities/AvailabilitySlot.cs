@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Dsw2026Tpi.CrossCutting.Exceptions;
+﻿using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 
 namespace Dsw2026Tpi.Domain.Entities
@@ -34,7 +31,6 @@ namespace Dsw2026Tpi.Domain.Entities
             Deleted = false;
         }
     
-        //Método para reservar un turno
         public void Book()
         {
             if (Status != SlotStatus.AVAILABLE)
@@ -42,7 +38,6 @@ namespace Dsw2026Tpi.Domain.Entities
             Status = SlotStatus.BOOKED;
         }
 
-        //Método para liberar un turno
         public void Release()
         {
             if (Status != SlotStatus.BOOKED)
