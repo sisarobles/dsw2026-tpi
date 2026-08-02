@@ -9,7 +9,6 @@ using Dsw2026Tpi.Data.Identity;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -75,13 +74,7 @@ public class AuthenticationService : IAuthenticationService
 
         if (user == null)
         {
-            user = new ApplicationUser
-            {
-                UserName = request.Email,
-                Email = request.Email,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            user = CreateApplicationUser(request.Email);
 
             var createResult = await _userManager.CreateAsync(user);
 
@@ -119,13 +112,7 @@ public class AuthenticationService : IAuthenticationService
         if (!request.Email.IsEmailValid()) throw new ValidationException(ErrorCodes.REGISTER_USER_INVALID,
             nameof(ErrorCodes.REGISTER_USER_INVALID));
 
-        var user = new ApplicationUser
-        {
-            UserName = request.Email,
-            Email = request.Email,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        var user = CreateApplicationUser(request.Email);
 
         var result = await _userManager.CreateAsync(user, request.Password);
 
@@ -138,4 +125,12 @@ public class AuthenticationService : IAuthenticationService
 
         return new RegisterModel.Response(request.Email);
     }
+
+    private static ApplicationUser CreateApplicationUser(string email) => new()
+    {
+        UserName = email,
+        Email = email,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
 }
