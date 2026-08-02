@@ -1,8 +1,9 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Application.Extensions;
 using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
-using Dsw2026Tpi.CrossCutting.Exceptions;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -20,12 +21,13 @@ public class DoctorService : IDoctorService
         var doctors = await _persistence.Paginate<Doctor, string>(pageSize, pageIndex, d => d.IsActive &&
             (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)), x => x.Name, nameof(Doctor.Speciality));
 
-        return doctors.Map(d => new DoctorModel.Response(d.Id, d.Name, d.LicenseNumber, d.IsActive,
-            new DoctorModel.SpecialtyDto(d.Speciality?.Id, d.Speciality?.Name)));
+        return doctors.Map(d => d.ToResponse());
     }
 
     public async Task<DoctorModel.Response> CreateAsync(DoctorModel.Request request)
     {
+        request.Name.ValidateName();
+
         var speciality = await _persistence.GetById<Speciality>(request.SpecialtyId)
             ?? throw new EntityNotFoundException(nameof(Speciality));
 
@@ -35,17 +37,13 @@ public class DoctorService : IDoctorService
         var doctor = new Doctor(request.Name, request.LicenseNumber, request.SpecialtyId);
         await _persistence.Add(doctor);
 
-        return new DoctorModel.Response(
-            doctor.Id,
-            doctor.Name,
-            doctor.LicenseNumber,
-            doctor.IsActive,
-            new DoctorModel.SpecialtyDto(speciality.Id, speciality.Name)
-        );
+        return doctor.ToResponse(speciality);
     }
 
     public async Task<DoctorModel.Response> UpdateAsync(Guid id, DoctorModel.Request request)
     {
+        request.Name.ValidateName();
+
         var doctor = await _persistence.GetById<Doctor>(id)
             ?? throw new EntityNotFoundException(nameof(Doctor));
 
@@ -58,13 +56,7 @@ public class DoctorService : IDoctorService
         doctor.Update(request.Name, request.LicenseNumber, request.SpecialtyId);
         await _persistence.Update(doctor);
 
-        return new DoctorModel.Response(
-            doctor.Id,
-            doctor.Name,
-            doctor.LicenseNumber,
-            doctor.IsActive,
-            new DoctorModel.SpecialtyDto(speciality.Id, speciality.Name)
-        );
+        return doctor.ToResponse(speciality);
     }
 
     public async Task<bool> DeactivateAsync(Guid id)

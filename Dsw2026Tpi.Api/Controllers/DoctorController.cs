@@ -54,7 +54,7 @@ public class DoctorController : AppController
             return NotFound(); // Error 404 si el médico no existe
         }
 
-        return NoContent(); // Código 204: Todo salió bien y no hay datos que devolver
+        return Ok("ok"); 
     }
 
     [HttpPut("{id}")]

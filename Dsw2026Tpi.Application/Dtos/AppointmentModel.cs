@@ -16,7 +16,7 @@
     public record AppointmentSearchModel
     {
         public record Request(Guid? SpecialtyId, Guid? DoctorId, long? PatientDni, DateOnly? Date);
-        public record Response(string Specialty, string DoctorName, TimeOnly AvailableTime);
+        public record Response(string Specialty, string Doctor, TimeOnly AvailableTime);
     }
 
 }
