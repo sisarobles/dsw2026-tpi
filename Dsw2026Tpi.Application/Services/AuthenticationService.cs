@@ -92,7 +92,7 @@ public class AuthenticationService : IAuthenticationService
         else
         {
             var existingPatient = await _persistence.First<Patient>(p => p.UserId == user.Id)
-        ?? throw new AuthenticationException();
+                ?? throw new AuthenticationException();
 
             if (existingPatient.Dni != request.Dni)
             {

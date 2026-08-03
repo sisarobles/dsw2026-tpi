@@ -37,7 +37,7 @@ namespace Dsw2026Tpi.Application.Services
             return response;
         }
 
-        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId) 
+        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId)  
         {
             await GetActiveDoctorOrThrow(doctorId);
 
@@ -49,7 +49,7 @@ namespace Dsw2026Tpi.Application.Services
                 r.Year == now.Year &&
                 !r.Deleted);
 
-            return rules.Select(r => new AvailabilityModel.Response(
+            return rules!.Select(r => new AvailabilityModel.Response(
                 r.Id,
                 r.DayOfWeek.ToSpanish(),
                 r.StartTime,
@@ -144,9 +144,9 @@ namespace Dsw2026Tpi.Application.Services
                      r.Year == year &&
                      !r.Deleted);
 
-            var cantidad = reglasExistentes.Count();
+            var cantidad = reglasExistentes!.Count();
 
-            foreach (var regla in reglasExistentes)
+            foreach (var regla in reglasExistentes!)
             {
                 try
                 {

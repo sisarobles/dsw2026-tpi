@@ -16,7 +16,6 @@ namespace Dsw2026Tpi.Application.Extensions
                 appointment.Estado.ToString(),
                 appointment.Reason,
                 new AppointmentModel.PatientSummary(
-                    patient.Id, 
                     patient.Dni, 
                     patient.FullName ?? string.Empty
                 ),
@@ -41,10 +40,25 @@ namespace Dsw2026Tpi.Application.Extensions
         public static AppointmentSearchModel.Response ToSearchResponse(this Appointment appointment)
         {
             return new AppointmentSearchModel.Response(
-                appointment.AvailabilitySlot?.AvailabilityRule?.Doctor.Speciality?.Name ?? string.Empty,
-                appointment.AvailabilitySlot?.AvailabilityRule?.Doctor.Name ?? string.Empty,
-                appointment.AvailabilitySlot?.StartTime ?? default
-            );
+                        appointment.Id,
+                        appointment.Estado.ToString(),
+                            new AppointmentModel.PatientSummary
+                            (
+                                appointment!.Patient!.Dni,
+                                appointment!.Patient!.FullName!
+                            ),
+                            new AppointmentSearchModel.DoctorSummary
+                            (
+                                appointment!.AvailabilitySlot!.AvailabilityRule!.DoctorId,
+                                appointment!.AvailabilitySlot!.AvailabilityRule!.Doctor!.Name,
+                                    new AppointmentSearchModel.SpecialtySummary
+                                    (
+                                        appointment.AvailabilitySlot!.AvailabilityRule!.Doctor!.Speciality!.Id,
+                                        appointment.AvailabilitySlot.AvailabilityRule.Doctor.Speciality.Name
+                                    )
+                            )                                    
+                      );
+            
         }
     }
 }

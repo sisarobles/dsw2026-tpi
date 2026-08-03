@@ -14,10 +14,10 @@ namespace Dsw2026Tpi.Application.Extensions
             var slotsExistentes = await persistence.GetFiltered<AvailabilitySlot>(
                 s => s.AvailabilityRuleId == regla.Id && !s.Deleted);
 
-            if (slotsExistentes.Any(s => s.Status == SlotStatus.BOOKED))
+            if (slotsExistentes!.Any(s => s.Status == SlotStatus.BOOKED))
                 throw new BusinessRuleException(ErrorCodes.AVAILABILITY_BOOKED_SLOTS,nameof(ErrorCodes.AVAILABILITY_BOOKED_SLOTS));
 
-            foreach (var slot in slotsExistentes)
+            foreach (var slot in slotsExistentes!)
                 await persistence.Delete(slot);
 
             await persistence.Delete(regla);

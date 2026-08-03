@@ -84,7 +84,7 @@ namespace Dsw2026Tpi.Application.Services
             var appointments = await _persistence.GetFiltered<Appointment>(a =>
                 (a.PatientId == patient.Id) &&
                 (a.Estado == Estado.BOOKED));
-            return appointments.Select(a => a.ToSummaryResponse());
+            return appointments!.Select(a => a.ToSummaryResponse());
         }
 
         public async Task<Pagination<AppointmentSearchModel.Response>> GetAppointmentBySearch(AppointmentSearchModel.Request request, int pageSize, int pageIndex)
