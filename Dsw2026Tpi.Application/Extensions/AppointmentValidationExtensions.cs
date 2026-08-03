@@ -20,7 +20,7 @@ namespace Dsw2026Tpi.Application.Extensions
 
         public static void ValidateSlotForBooking(this AvailabilitySlot slot, Guid expectedDoctorId)
         {
-            if (slot.AvailabilityRule?.DoctorId != expectedDoctorId)
+            if (slot.AvailabilityRule!.DoctorId != expectedDoctorId)
             {
                 throw new ValidationException(
                     ErrorCodes.VALIDATION_ERROR,

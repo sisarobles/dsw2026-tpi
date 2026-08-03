@@ -15,7 +15,7 @@ namespace Dsw2026Tpi.Domain.Entities
         public Estado Estado { get; private set; }
         public string Reason { get; private set; }
         public Guid PatientId { get; private set; }
-        public Patient? Patient { get; set; }
+        public Patient? Patient { get; private set; }
         public Guid AvailabilitySlotId { get; private set; }
         public AvailabilitySlot? AvailabilitySlot { get; private set; }
 
