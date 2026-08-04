@@ -46,6 +46,7 @@ public class ExceptionHandlingMiddleware
             EntityNotFoundException => HttpStatusCode.NotFound,
             ConflictException or AuthenticationException => HttpStatusCode.Conflict,
             AuthorizationException => HttpStatusCode.Unauthorized,
+            BusinessRuleException => HttpStatusCode.Conflict,
             _ => HttpStatusCode.InternalServerError,
         };
         var result = JsonSerializer.Serialize(error, _jsonOptions); 
