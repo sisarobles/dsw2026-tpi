@@ -1,16 +1,163 @@
 # Trabajo Práctico Integrador
+
 ## Desarrollo de Software 2026
 
-Acceso al [documento](https://frtutneduar-my.sharepoint.com/:b:/g/personal/vicentechibilisco_doc_frt_utn_edu_ar/IQBqAO7n0tThToIjU5lyvr6VARcezhr8xXfX6eJQJDkzCHA?e=I8A0pa)
+### Integrantes
 
-Instrucciones:
-* Realizar una bifurcación por grupo
-* Crear una rama de larga duración `development`
-* Completar `README` con los integrantes en cada bifurcación
-* Todos los integrantes deben participar con confirmaciones en el repositorio bifurcado
-* Organizar el trabajo en equipo y crear ramas temporales
-* Actualizar la rama de larga duración mediante **pull-requests**
-* No eliminar las ramas temporales
-* Tener en cuenta que ya se realizaron las migraciones de Identity, crear nuevas de ser necesario
-* Para más detalles, revisar la grabación de la última clase
-* El endpoint de registración de usuarios administradores está disponible para crear usuarios y poder hacer pruebas, a futuro se eliminará
+| Nombre | Legajo |
+|---------|---------|
+| Baena, Paula Melina | 60596 | 
+| Gutierrez, Maia | 60348 | 
+| Herrera Barboza, Lucrecia Jazmín | 60754 | 
+|Robles, Sisa Verónica | 60535 | 
+
+---
+
+## Descripción
+
+Este proyecto corresponde al Trabajo Práctico Integrador de la materia Desarrollo de Software.
+
+Se desarrolló una API REST para la gestión de turnos médicos, permitiendo administrar médicos, especialidades, disponibilidades y reservas de turnos mediante autenticación basada en JWT.
+
+---
+
+## Tecnologías utilizadas
+
+- C#
+- ASP.NET Core
+- .NET 10
+- Entity Framework Core
+- SQLite
+- ASP.NET Core Identity
+- JWT
+- Swagger / OpenAPI
+
+---
+
+# Endpoints
+
+## Autenticación
+
+### POST /api/auth/admin/login
+
+Autentica un administrador mediante correo electrónico y contraseña. Devuelve un token JWT para acceder a los recursos protegidos.
+
+### POST /api/auth/patient/login
+
+Autentica a un paciente utilizando correo electrónico y DNI. Si es el primer acceso, el paciente se registra automáticamente y se genera un token JWT.
+
+---
+
+## Especialidades
+
+### GET /api/specialties
+
+Obtiene el listado de especialidades activas. Disponible para Administradores y Pacientes.
+
+Permite paginación y búsqueda por nombre.
+
+### POST /api/specialties
+
+Registra una nueva especialidad médica.
+
+Solo disponible para Administradores.
+
+### PUT /api/specialties/{id}
+
+Actualiza una especialidad existente.
+
+Solo disponible para Administradores.
+
+### DELETE /api/specialties/{id}
+
+Realiza el borrado lógico de una especialidad.
+
+Solo disponible para Administradores.
+
+---
+
+## Médicos
+
+### GET /api/doctors
+
+Obtiene el listado de médicos activos.
+
+Permite paginación y búsqueda por nombre.
+
+### GET /api/doctors/{id}/availabilities
+
+Obtiene la disponibilidad del médico para el mes actual.
+
+### POST /api/doctors
+
+Registra un nuevo médico.
+
+Solo disponible para Administradores.
+
+### PUT /api/doctors/{id}
+
+Actualiza un médico existente.
+
+Solo disponible para Administradores.
+
+### DELETE /api/doctors/{id}
+
+Realiza el borrado lógico de un médico.
+
+Solo disponible para Administradores.
+
+---
+
+## Disponibilidades
+
+### POST /api/availabilities
+
+Genera automáticamente los turnos disponibles del médico para el mes en curso.
+
+Solo disponible para Administradores.
+
+### PUT /api/availabilities
+
+Actualiza la disponibilidad mensual del médico manteniendo las reservas existentes.
+
+Solo disponible para Administradores.
+
+---
+
+## Turnos
+
+### POST /api/appointments
+
+Permite a un paciente reservar un turno.
+
+### GET /api/appointments/patient
+
+Obtiene los turnos reservados por el paciente.
+
+### DELETE /api/appointments/{id}
+
+Cancela un turno reservado.
+
+### GET /api/appointments
+
+Lista los turnos de una fecha determinada.
+
+Solo disponible para Administradores.
+
+### GET /api/appointments/search
+
+Permite realizar búsquedas avanzadas de turnos mediante distintos filtros.
+
+Solo disponible para Administradores.
+
+---
+
+## Documentación
+
+Al ejecutar la aplicación en modo desarrollo, la documentación de la API estará disponible mediante Swagger.
+
+---
+
+## Estado del proyecto
+
+Backend correspondiente al Trabajo Práctico Integrador de Desarrollo de Software 2026.
