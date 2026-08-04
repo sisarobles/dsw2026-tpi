@@ -107,24 +107,7 @@ public class AuthenticationService : IAuthenticationService
         return new LoginPatientModel.Response(token, role);
     }
 
-    public async Task<RegisterModel.Response> Register(RegisterModel.Request request)
-    {
-        if (!request.Email.IsEmailValid()) throw new ValidationException(ErrorCodes.REGISTER_USER_INVALID,
-            nameof(ErrorCodes.REGISTER_USER_INVALID));
-
-        var user = CreateApplicationUser(request.Email);
-
-        var result = await _userManager.CreateAsync(user, request.Password);
-
-        if (!result.Succeeded) throw new ConflictException(ErrorCodes.REGISTER_USER_CONFLICT, nameof(ErrorCodes.REGISTER_USER_CONFLICT))
-                .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
-       
-        _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
-
-        await _logService.RegistrarAsync("Auth", "ADMIN_REGISTERED", $"Usuario admin registrado: {request.Email}");
-
-        return new RegisterModel.Response(request.Email);
-    }
+  
 
     private static ApplicationUser CreateApplicationUser(string email) => new()
     {
