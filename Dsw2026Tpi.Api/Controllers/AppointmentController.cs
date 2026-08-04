@@ -53,7 +53,7 @@ namespace Dsw2026Tpi.Api.Controllers
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpGet()]
         [Authorize(Policy = Policies.AdminPolicy)]
         public async Task<IActionResult> GetAppointmentsByDate([FromQuery] DateOnly date, [FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 1)
         {
