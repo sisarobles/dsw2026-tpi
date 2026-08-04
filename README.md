@@ -52,7 +52,7 @@ Autentica a un paciente utilizando correo electrónico y DNI. Si es el primer ac
 
 ### GET /api/specialties
 
-Obtiene el listado de especialidades activas. Disponible para Administradores y Pacientes.
+Obtiene el listado de especialidades activas. Disponible para Administradores.
 
 Permite paginación y búsqueda por nombre.
 
