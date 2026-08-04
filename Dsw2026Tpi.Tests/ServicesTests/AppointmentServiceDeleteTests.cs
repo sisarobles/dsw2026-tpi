@@ -29,7 +29,8 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 availabilityRuleId: Guid.NewGuid(),
                 slotDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
                 startTime: new TimeOnly(9, 0),
-                endTime: new TimeOnly(9, 30));
+                endTime: new TimeOnly(9, 30)
+            );
             
             slot.Book(); 
 

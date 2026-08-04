@@ -56,16 +56,16 @@ namespace Dsw2026Tpi.Api.Configurations
                     });
 
                     options.AddPolicy<string>("AppointmentPolicy", httpContext =>
-    RateLimitPartition.GetFixedWindowLimiter(
-        partitionKey: httpContext.User.Identity?.Name
-            ?? httpContext.Connection.RemoteIpAddress?.ToString()
-            ?? "unknown",
-        factory: _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = appointmentLimit,
-            Window = TimeSpan.FromMinutes(appointmentWindow),
-            QueueLimit = 0
-        }));
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.User.Identity?.Name
+                            ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                            ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = appointmentLimit,
+                            Window = TimeSpan.FromMinutes(appointmentWindow),
+                            QueueLimit = 0
+                        }));
 
                     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                         RateLimitPartition.GetFixedWindowLimiter(
