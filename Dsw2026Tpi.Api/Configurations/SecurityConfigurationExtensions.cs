@@ -11,14 +11,12 @@ public static class SecurityConfigurationExtensions
 {
     public static IServiceCollection AddAppAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        //Obtener parámetros para creación del JWT desde appsettings.json
         var jwtConfig = configuration.GetSection("Jwt");
         var keyText = jwtConfig["Key"] ?? throw new ArgumentNullException("JWT Key");
         var issuer = jwtConfig["Issuer"] ?? throw new ArgumentNullException("JWT Issuer");
         var audience = jwtConfig["Audience"] ?? throw new ArgumentNullException("JWT Audience");
         var key = Encoding.UTF8.GetBytes(keyText);
 
-        //Agregar autenticación
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -27,7 +25,6 @@ public static class SecurityConfigurationExtensions
         })
             .AddJwtBearer(options =>
             {
-                //Definir parámetros para la generación del token
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -49,7 +46,6 @@ public static class SecurityConfigurationExtensions
 
     public static IServiceCollection AddAppCors(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
-        //Obtener configuración para CORS desde appsettings.json
         var allowedOrigins = configuration
                             .GetSection("Cors:AllowedOrigins")
                             .Get<string[]>()?
@@ -58,7 +54,6 @@ public static class SecurityConfigurationExtensions
                             .Distinct(StringComparer.OrdinalIgnoreCase)
                             .ToArray();
 
-        //Si no se definió configuración en el archivo, utilizar la que se define
         if (allowedOrigins is null || allowedOrigins.Length == 0)
         {
             allowedOrigins =
@@ -68,7 +63,6 @@ public static class SecurityConfigurationExtensions
             ];
         }
 
-        //Agregar CORS con la política por defecto a partir de las URLs definidas
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -92,7 +86,6 @@ public static class SecurityConfigurationExtensions
 
         return services;
     }
-
     public static IServiceCollection AddAppIdentity(this IServiceCollection services)
     {
         services.AddIdentityCore<ApplicationUser>(options =>

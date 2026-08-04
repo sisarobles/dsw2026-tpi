@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Dsw2026Tpi.Application.Dtos;
+﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
@@ -23,7 +20,7 @@ namespace Dsw2026Tpi.Application.Extensions
 
         public static void ValidateSlotForBooking(this AvailabilitySlot slot, Guid expectedDoctorId)
         {
-            if (slot.AvailabilityRule?.DoctorId != expectedDoctorId)
+            if (slot.AvailabilityRule!.DoctorId != expectedDoctorId)
             {
                 throw new ValidationException(
                     ErrorCodes.VALIDATION_ERROR,

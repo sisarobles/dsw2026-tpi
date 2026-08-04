@@ -4,7 +4,6 @@ using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 
-
 namespace Dsw2026Tpi.Application.Extensions
 {
     public static class AvailabilityValidationExtensions
@@ -32,7 +31,7 @@ namespace Dsw2026Tpi.Application.Extensions
                      r.DayOfWeek == dayOfWeek &&
                      !r.Deleted);
 
-            var haySolapamiento = rulesOfTheDay.Any(r =>
+            var haySolapamiento = rulesOfTheDay!.Any(r =>
                 dayRequest.StartTime < r.EndTime &&
                 dayRequest.EndTime > r.StartTime);
 

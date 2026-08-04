@@ -18,15 +18,13 @@ public class SpecialitiesController : AppController
         _specialityService = specialityService;
     }
 
-    // Petición GET: Devuelve la lista de especialidades
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int pageSize, [FromQuery] int pageIndex, [FromQuery] string? name = null)
+    public async Task<IActionResult> GetAll([FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 1, [FromQuery] string? name = null)
     {
         var specialities = await _specialityService.GetAllAsync(pageSize, pageIndex, name);
         return Ok(specialities);
     }
 
-    // Petición POST: Crea una nueva especialidad
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] SpecialityModel.Request request)
     {
@@ -40,7 +38,7 @@ public class SpecialitiesController : AppController
         var success = await _specialityService.DeactivateAsync(id);
         if (!success) return NotFound();
 
-        return NoContent();
+        return Ok("ok");
     }
 
     [HttpPut("{id}")]

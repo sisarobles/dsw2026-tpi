@@ -11,18 +11,16 @@ public static class PersistenceConfigurationExtensions
     public static IServiceCollection AddApplicationPersistence(this IServiceCollection services,
         IConfiguration configuration)
     {
-        //Obtener cadena de conexión desde appsettings.json
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        //Agregar contexto (O/RM) y utilizar SQL Server para DB
         services.AddDbContext<Dsw2026TpiDbContext>(options =>
         {
-            options.UseSqlServer(connectionString);
+           options.UseSqlite(connectionString);
         });
 
         services.AddDbContext<AuthenticationDbContext>(options =>
         {
-            options.UseSqlServer(connectionString);
+            options.UseSqlite(connectionString);
             options.UseSeeding((c, t) =>
             {
                 c.Seedwork<IdentityRole>("Sources\\roles.json");

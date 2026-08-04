@@ -1,9 +1,6 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Domain.Entities;
-using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace Dsw2026Tpi.Application.Extensions
 {
@@ -11,7 +8,7 @@ namespace Dsw2026Tpi.Application.Extensions
     {
         public static Expression<Func<Appointment, bool>> ToSearchPredicate(this AppointmentSearchModel.Request request)
         {
-            return a => (request.SpecialtyId == null || a.AvailabilitySlot!.AvailabilityRule!.Doctor.SpecialityId == request.SpecialtyId)
+            return a => (request.SpecialtyId == null || a.AvailabilitySlot!.AvailabilityRule!.Doctor!.SpecialityId == request.SpecialtyId)
                      && (request.DoctorId == null || a.AvailabilitySlot!.AvailabilityRule!.DoctorId == request.DoctorId)
                      && (request.Date == null || a.AvailabilitySlot!.SlotDate == request.Date)
                      && (request.PatientDni == null || a.Patient!.Dni == request.PatientDni);
