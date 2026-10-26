@@ -2,6 +2,9 @@ using Dsw2026Tpi.Api.Configurations;
 using Dsw2026Tpi.Api.Middlewares;
 using Serilog;
 using System.Text.Json.Serialization;
+using Dsw2026Tpi.Data;
+using Dsw2026Tpi.Data.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dsw2026Tpi.Api;
 
@@ -36,7 +39,21 @@ public class Program
 
             var app = builder.Build();
 
-            await app.SeedDatabaseAsync();
+if (app.Environment.IsDevelopment())
+{
+    await using var scope = app.Services.CreateAsyncScope();
+
+    var applicationDbContext =
+        scope.ServiceProvider.GetRequiredService<Dsw2026TpiDbContext>();
+
+    var authenticationDbContext =
+        scope.ServiceProvider.GetRequiredService<AuthenticationDbContext>();
+
+    await applicationDbContext.Database.MigrateAsync();
+    await authenticationDbContext.Database.MigrateAsync();
+}
+
+await app.SeedDatabaseAsync();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();

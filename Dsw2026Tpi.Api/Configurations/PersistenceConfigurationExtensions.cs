@@ -23,7 +23,7 @@ public static class PersistenceConfigurationExtensions
             options.UseSqlite(connectionString);
             options.UseSeeding((c, t) =>
             {
-                c.Seedwork<IdentityRole>("Sources\\roles.json");
+                c.Seedwork<IdentityRole>("Sources/roles.json");
             });
         });
         return services;
