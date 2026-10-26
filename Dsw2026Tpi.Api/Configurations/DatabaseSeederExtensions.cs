@@ -30,8 +30,15 @@ namespace Dsw2026Tpi.Api.Configurations
             UserManager<ApplicationUser> userManager,
             IConfiguration config)
         {
-            var email = config["AdminSeed:Email"] ?? "admin@system.com";
-            var password = config["AdminSeed:Password"] ?? "Admin12345";
+            var email = config["AdminSeed:Email"];
+var password = config["AdminSeed:Password"];
+
+if (string.IsNullOrWhiteSpace(email) ||
+    string.IsNullOrWhiteSpace(password))
+{
+    throw new InvalidOperationException(
+        "Faltan configurar AdminSeed:Email y AdminSeed:Password.");
+}
 
             if (await userManager.FindByEmailAsync(email) is not null) return;
 
