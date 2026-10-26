@@ -364,3 +364,8 @@ FodyWeavers.xsd
 # App settings con datos sensibles (no versionar)
 **/appsettings.Development.json
 **/appsettings.Local.json
+
+# Bases de datos locales SQLite
+*.db
+*.db-shm
+*.db-wal
