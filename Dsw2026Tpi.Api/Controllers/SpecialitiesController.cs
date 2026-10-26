@@ -25,6 +25,15 @@ public class SpecialitiesController : AppController
         return Ok(specialities);
     }
 
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById([FromRoute] Guid id)
+    {
+        var speciality = await _specialityService.GetByIdAsync(id);
+        return Ok(speciality);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] SpecialityModel.Request request)
     {

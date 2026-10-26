@@ -44,6 +44,21 @@ namespace Dsw2026Tpi.Application.Services
             ));
         }
 
+        public async Task<SpecialityModel.Response> GetByIdAsync(Guid id)
+        {
+            var speciality = await _persistence.GetById<Speciality>(id)
+                ?? throw new EntityNotFoundException(nameof(Speciality));
+
+            if (!speciality.IsActive)
+                throw new EntityNotFoundException(nameof(Speciality));
+
+            return new SpecialityModel.Response(
+                speciality.Id,
+                speciality.Name,
+                speciality.Description,
+                speciality.IsActive
+            );
+        }
         public async Task<SpecialityModel.Response> UpdateAsync(Guid id, SpecialityModel.Request request)
         {
             var speciality = await _persistence.GetById<Speciality>(id)

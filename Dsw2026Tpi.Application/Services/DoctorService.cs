@@ -24,6 +24,25 @@ public class DoctorService : IDoctorService
         return doctors.Map(d => d.ToResponse());
     }
 
+    public async Task<DoctorModel.Response> GetByIdAsync(Guid id)
+    {
+        var doctor = await _persistence.GetById<Doctor>(id)
+         ?? throw new EntityNotFoundException(nameof(Doctor));
+
+        if (!doctor.IsActive)
+            throw new EntityNotFoundException(nameof(Doctor));
+
+        Speciality? speciality = null;
+
+        if (doctor.SpecialityId.HasValue)
+        {
+            speciality = await _persistence.GetById<Speciality>(
+                doctor.SpecialityId.Value);
+        }
+
+        return doctor.ToResponse(speciality);
+    }
+
     public async Task<DoctorModel.Response> CreateAsync(DoctorModel.Request request)
     {
         request.Name.ValidateName();
