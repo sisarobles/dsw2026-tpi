@@ -69,7 +69,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 .Returns(call => call.Arg<Appointment>());
 
             // Act
-            await _service.CreateAppointment("user-123", request);
+            await _service.CreateAppointment("test-user", request);
 
             // Assert
             Assert.Equal(SlotStatus.BOOKED, slot.Status);
@@ -129,7 +129,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             // Act
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _service.CreateAppointment("user-123", request));
+                () => _service.CreateAppointment("test-user", request));
 
             // Assert
             await _persistence.Received(1).BeginTransactionAsync();
