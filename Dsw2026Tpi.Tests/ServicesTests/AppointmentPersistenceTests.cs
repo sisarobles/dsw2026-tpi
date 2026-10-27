@@ -10,7 +10,6 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 {
     public class AppointmentPersistenceTests
     {
-
         [Fact]
         public async Task Add_CuandoExisteOtraCitaActivaParaElSlot_LanzaConflictException()
         {
@@ -54,7 +53,6 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 exception.Error.ErrorCode);
         }
 
-
         [Fact]
         public async Task Add_CuandoLaCitaAnteriorEstaCancelada_PermiteNuevaReserva()
         {
@@ -75,7 +73,6 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             await context.Database.EnsureCreatedAsync();
 
             var persistence = new PersistenceEf(context);
-
             var slotId = Guid.NewGuid();
 
             var previousAppointment = new Appointment(
@@ -119,17 +116,18 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             var indexes = await context.Database
                 .SqlQueryRaw<string>(
                     """
-            SELECT name AS Value
-            FROM sqlite_master
-            WHERE type = 'index'
-              AND name = 'IX_Appointments_AvailabilitySlotId'
-              AND sql LIKE '%WHERE%'
-            """)
+                    SELECT name AS Value
+                    FROM sqlite_master
+                    WHERE type = 'index'
+                      AND name = 'IX_Appointments_AvailabilitySlotId'
+                      AND sql LIKE '%WHERE%'
+                    """)
                 .ToListAsync();
 
-            Assert.Contains("IX_Appointments_AvailabilitySlotId", indexes);
+            Assert.Contains(
+                "IX_Appointments_AvailabilitySlotId",
+                indexes);
         }
-
 
         [Fact]
         public async Task TryBookAvailabilitySlot_CuandoDosOperacionesCompiten_SoloUnaReservaElTurno()
@@ -179,7 +177,8 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             await using var verificationContext =
                 new Dsw2026TpiDbContext(options);
 
-            var savedSlot = await verificationContext.Set<AvailabilitySlot>()
+            var savedSlot = await verificationContext
+                .Set<AvailabilitySlot>()
                 .AsNoTracking()
                 .SingleAsync(slot => slot.Id == slotId);
 
@@ -195,6 +194,5 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 .Select(slot => slot.Id)
                 .ToListAsync();
         }
-
     }
 }
