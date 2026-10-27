@@ -10,6 +10,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 {
     public class AppointmentPersistenceTests
     {
+
         [Fact]
         public async Task Add_CuandoExisteOtraCitaActivaParaElSlot_LanzaConflictException()
         {
@@ -18,19 +19,19 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             await connection.OpenAsync();
 
+            await using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA foreign_keys = OFF;";
+            await command.ExecuteNonQueryAsync();
+
             var options = new DbContextOptionsBuilder<Dsw2026TpiDbContext>()
                 .UseSqlite(connection)
                 .Options;
 
             await using var context = new Dsw2026TpiDbContext(options);
 
-            await context.Database.ExecuteSqlRawAsync(
-                "PRAGMA foreign_keys = OFF;");
-
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.MigrateAsync();
 
             var persistence = new PersistenceEf(context);
-
             var slotId = Guid.NewGuid();
 
             var firstAppointment = new Appointment(
@@ -45,9 +46,14 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 slotId,
                 "Segunda reserva");
 
-            await Assert.ThrowsAsync<ConflictException>(
+            var exception = await Assert.ThrowsAsync<ConflictException>(
                 async () => await persistence.Add(secondAppointment));
+
+            Assert.Equal(
+                nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT),
+                exception.Error.ErrorCode);
         }
+
 
         [Fact]
         public async Task Add_CuandoLaCitaAnteriorEstaCancelada_PermiteNuevaReserva()
@@ -92,6 +98,36 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             Assert.Equal(newAppointment.Id, result.Id);
             Assert.Equal(Estado.CANCELLED, previousAppointment.Estado);
             Assert.Equal(Estado.BOOKED, newAppointment.Estado);
+        }
+
+        [Fact]
+        public async Task Migrations_CreanIndiceUnicoParaTurnosActivos()
+        {
+            await using var connection =
+                new SqliteConnection("Data Source=:memory:");
+
+            await connection.OpenAsync();
+
+            var options = new DbContextOptionsBuilder<Dsw2026TpiDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            await using var context = new Dsw2026TpiDbContext(options);
+
+            await context.Database.MigrateAsync();
+
+            var indexes = await context.Database
+                .SqlQueryRaw<string>(
+                    """
+            SELECT name AS Value
+            FROM sqlite_master
+            WHERE type = 'index'
+              AND name = 'IX_Appointments_AvailabilitySlotId'
+              AND sql LIKE '%WHERE%'
+            """)
+                .ToListAsync();
+
+            Assert.Contains("IX_Appointments_AvailabilitySlotId", indexes);
         }
     }
 }
