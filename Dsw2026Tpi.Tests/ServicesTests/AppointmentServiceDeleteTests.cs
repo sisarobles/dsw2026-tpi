@@ -26,6 +26,8 @@ namespace Dsw2026Tpi.Tests.ServicesTests
         public async Task DeleteAppointment_CuandoElTurnoEstaReservado_LoCancelaYLiberaElSlot()
         {
             // Arrange
+            const string userId = "user-123";
+
             var slot = new AvailabilitySlot(
                 availabilityRuleId: Guid.NewGuid(),
                 slotDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
@@ -35,13 +37,19 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             slot.Book();
 
+            var patient = new Patient(
+                userId: userId,
+                dni: 12345678
+            );
+
             var appointment = new Appointment(
-                Guid.NewGuid(),
+                patient.Id,
                 slot.Id,
                 "Control del endpoint delete"
             );
 
             SetAvailabilitySlot(appointment, slot);
+            SetPatient(appointment, patient);
 
             _persistence
                 .GetById<Appointment>(
@@ -50,7 +58,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 .Returns(appointment);
 
             // Act
-            await _service.DeleteAppointment(appointment.Id);
+            await _service.DeleteAppointment(appointment.Id, userId);
 
             // Assert
             Assert.Equal(Estado.CANCELLED, appointment.Estado);
@@ -78,7 +86,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             // Act & Assert
             await Assert.ThrowsAsync<EntityNotFoundException>(
-                () => _service.DeleteAppointment(idInexistente));
+                () => _service.DeleteAppointment(idInexistente, "user-123"));
 
             await _persistence.DidNotReceive().BeginTransactionAsync();
             await _persistence.DidNotReceive().Update(
@@ -93,6 +101,15 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             typeof(Appointment)
                 .GetProperty(nameof(Appointment.AvailabilitySlot))!
                 .SetValue(appointment, slot);
+        }
+
+        private static void SetPatient(
+            Appointment appointment,
+            Patient patient)
+        {
+            typeof(Appointment)
+                .GetProperty(nameof(Appointment.Patient))!
+                .SetValue(appointment, patient);
         }
     }
 }

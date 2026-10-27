@@ -23,7 +23,7 @@ namespace Dsw2026Tpi.Application.Services
         }
 
 
-        public async Task<AppointmentModel.Response> CreateAppointment(AppointmentModel.Request request)
+        public async Task<AppointmentModel.Response> CreateAppointment(string userId, AppointmentModel.Request request)
         {
             request.Reason.ValidateReason();
             request.Patient.ValidatePatient();
@@ -36,8 +36,13 @@ namespace Dsw2026Tpi.Application.Services
             slot.ValidateSlotForBooking(request.DoctorId);
 
             var patient = await _persistence.First<Patient>(
-                p => p.Dni == request.Patient!.Dni)
+                p => p.UserId == userId)
                 ?? throw new EntityNotFoundException(nameof(Patient));
+
+            if (patient.Dni != request.Patient!.Dni)
+            {
+                throw new AuthorizationException();
+            }
 
             var patientId = patient.Id;
 
@@ -97,12 +102,18 @@ namespace Dsw2026Tpi.Application.Services
 
 
 
-        public async Task DeleteAppointment(Guid idAppointment)
+        public async Task DeleteAppointment(Guid idAppointment, string userId)
         {
             var appointment = await _persistence.GetById<Appointment>(
                 idAppointment,
-                nameof(Appointment.AvailabilitySlot))
+                nameof(Appointment.AvailabilitySlot),
+                nameof(Appointment.Patient))
                 ?? throw new EntityNotFoundException(nameof(Appointment));
+
+            if (appointment.Patient?.UserId != userId)
+            {
+                throw new AuthorizationException();
+            }
 
             await _persistence.BeginTransactionAsync();
 
@@ -129,13 +140,17 @@ namespace Dsw2026Tpi.Application.Services
         }
 
 
-        public async Task<IEnumerable<AppointmentSummaryModel.Response>> GetAppointmentByDni(long dni) 
+        public async Task<IEnumerable<AppointmentSummaryModel.Response>>
+        GetAppointmentByDni(string userId)
         {
-            var patient = await _persistence.First<Patient>(p => p.Dni == dni)
+            var patient = await _persistence.First<Patient>(
+                p => p.UserId == userId)
                 ?? throw new EntityNotFoundException(nameof(Patient));
+
             var appointments = await _persistence.GetFiltered<Appointment>(a =>
-                (a.PatientId == patient.Id) &&
-                (a.Estado == Estado.BOOKED));
+                a.PatientId == patient.Id &&
+                a.Estado == Estado.BOOKED);
+
             return appointments!.Select(a => a.ToSummaryResponse());
         }
 

@@ -53,9 +53,7 @@ public class AuthenticationService : IAuthenticationService
 
         var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
 
-        var token = _jwtService.GenerateToken(user.UserName!, role);
-
-        await _logService.RegistrarAsync("Auth", "LOGIN_ADMIN_SUCCESS", $"Login exitoso para {request.Email}");
+        var token = _jwtService.GenerateToken(user.Id, user.UserName!, role); await _logService.RegistrarAsync("Auth", "LOGIN_ADMIN_SUCCESS", $"Login exitoso para {request.Email}");
 
         return new LoginAdminModel.Response(
             token,
@@ -102,7 +100,7 @@ public class AuthenticationService : IAuthenticationService
         }
 
         var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-        var token = _jwtService.GenerateToken(user.UserName!, role);
+        var token = _jwtService.GenerateToken(user.Id, user.UserName!, role);
         await _logService.RegistrarAsync("Auth", "LOGIN_PATIENT_SUCCESS", $"Login exitoso para {request.Email}");
         return new LoginPatientModel.Response(token, role);
     }

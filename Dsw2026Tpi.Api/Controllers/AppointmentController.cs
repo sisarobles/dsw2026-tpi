@@ -4,7 +4,7 @@ using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-
+using System.Security.Claims;
 
 namespace Dsw2026Tpi.Api.Controllers
 {
@@ -21,17 +21,28 @@ namespace Dsw2026Tpi.Api.Controllers
         [HttpPost]
         [Authorize(Policy = Policies.PatientPolicy)]
         [EnableRateLimiting("AppointmentPolicy")]
-        public async Task<IActionResult> CreateAppointment([FromBody] AppointmentModel.Request request)
+        public async Task<IActionResult> CreateAppointment(
+    [FromBody] AppointmentModel.Request request)
         {
-            var result = await _service.CreateAppointment(request);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized();
+
+            var result = await _service.CreateAppointment(userId, request);
             return Created(string.Empty, result);
         }
 
         [HttpGet("patient")]
         [Authorize(Policy = Policies.PatientPolicy)]
-        public async Task<IActionResult> GetAppointmentsByDni([FromQuery] long dni)
+        public async Task<IActionResult> GetAppointmentsByDni()
         {
-            var result = await _service.GetAppointmentByDni(dni);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized();
+
+            var result = await _service.GetAppointmentByDni(userId);
             return Ok(result);
         }
 
@@ -39,7 +50,12 @@ namespace Dsw2026Tpi.Api.Controllers
         [Authorize(Policy = Policies.PatientPolicy)]
         public async Task<IActionResult> DeleteAppointment([FromRoute] Guid id)
         {
-            await _service.DeleteAppointment(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized();
+
+            await _service.DeleteAppointment(id, userId);
             return Ok("ok");
         }
 
