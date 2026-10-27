@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Domain.Entities;
+﻿
+using Dsw2026Tpi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,13 +10,19 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
     public void Configure(EntityTypeBuilder<Appointment> builder)
     {
         builder.ToTable("Appointments");
+
         builder.HasOne(a => a.AvailabilitySlot)
-            .WithMany() 
+            .WithMany()
             .HasForeignKey(a => a.AvailabilitySlotId)
             .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(a => a.Patient)
             .WithMany()
             .HasForeignKey(a => a.PatientId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(a => a.AvailabilitySlotId)
+            .IsUnique()
+            .HasFilter("\"Estado\" <> 2");
     }
 }

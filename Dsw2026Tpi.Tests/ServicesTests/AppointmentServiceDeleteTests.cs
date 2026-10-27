@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Application.Services;
+﻿
+using Dsw2026Tpi.Application.Services;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
@@ -24,47 +25,70 @@ namespace Dsw2026Tpi.Tests.ServicesTests
         [Fact]
         public async Task DeleteAppointment_CuandoElTurnoEstaReservado_LoCancelaYLiberaElSlot()
         {
-            //Arrange
+            // Arrange
             var slot = new AvailabilitySlot(
                 availabilityRuleId: Guid.NewGuid(),
                 slotDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
                 startTime: new TimeOnly(9, 0),
                 endTime: new TimeOnly(9, 30)
             );
-            
-            slot.Book(); 
 
-            var appointment = new Appointment(Guid.NewGuid(), slot.Id, "Control del endpoint delete");
-            SetAvailabilitySlot(appointment, slot); 
+            slot.Book();
 
-            _persistence.GetById<Appointment>(appointment.Id, Arg.Any<string[]>())
+            var appointment = new Appointment(
+                Guid.NewGuid(),
+                slot.Id,
+                "Control del endpoint delete"
+            );
+
+            SetAvailabilitySlot(appointment, slot);
+
+            _persistence
+                .GetById<Appointment>(
+                    appointment.Id,
+                    Arg.Any<string[]>())
                 .Returns(appointment);
 
-            //Act
+            // Act
             await _service.DeleteAppointment(appointment.Id);
 
-            //Assert
+            // Assert
             Assert.Equal(Estado.CANCELLED, appointment.Estado);
             Assert.Equal(SlotStatus.AVAILABLE, slot.Status);
+
+            await _persistence.Received(1).BeginTransactionAsync();
             await _persistence.Received(1).Update(appointment);
             await _persistence.Received(1).Update(slot);
+            await _persistence.Received(1).CommitTransactionAsync();
+
+            await _persistence.DidNotReceive().RollbackTransactionAsync();
         }
+
         [Fact]
         public async Task DeleteAppointment_CuandoElTurnoNoExiste_LanzaEntityNotFoundException()
         {
-            //Arrange
+            // Arrange
             var idInexistente = Guid.NewGuid();
 
-           _persistence.GetById<Appointment>(idInexistente, Arg.Any<string[]>())
-           .Returns((Appointment?)null);
+            _persistence
+                .GetById<Appointment>(
+                    idInexistente,
+                    Arg.Any<string[]>())
+                .Returns((Appointment?)null);
 
-            //Act & Assert
+            // Act & Assert
             await Assert.ThrowsAsync<EntityNotFoundException>(
                 () => _service.DeleteAppointment(idInexistente));
 
-            await _persistence.DidNotReceive().Update(Arg.Any<Appointment>());
+            await _persistence.DidNotReceive().BeginTransactionAsync();
+            await _persistence.DidNotReceive().Update(
+                Arg.Any<Appointment>());
+            await _persistence.DidNotReceive().CommitTransactionAsync();
         }
-        private static void SetAvailabilitySlot(Appointment appointment, AvailabilitySlot slot)
+
+        private static void SetAvailabilitySlot(
+            Appointment appointment,
+            AvailabilitySlot slot)
         {
             typeof(Appointment)
                 .GetProperty(nameof(Appointment.AvailabilitySlot))!

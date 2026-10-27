@@ -44,7 +44,9 @@ namespace Dsw2026Tpi.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AvailabilitySlotId");
+                    b.HasIndex("AvailabilitySlotId")
+                        .IsUnique()
+                        .HasFilter("\"Estado\" <> 2");
 
                     b.HasIndex("PatientId");
 
@@ -86,7 +88,8 @@ namespace Dsw2026Tpi.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DoctorId");
+                    b.HasIndex("DoctorId", "Year", "Month", "DayOfWeek", "StartTime", "EndTime")
+                        .IsUnique();
 
                     b.ToTable("AvailabilityRules", (string)null);
                 });
@@ -123,7 +126,8 @@ namespace Dsw2026Tpi.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AvailabilityRuleId");
+                    b.HasIndex("AvailabilityRuleId", "SlotDate", "StartTime")
+                        .IsUnique();
 
                     b.ToTable("AvailabilitySlots", (string)null);
                 });

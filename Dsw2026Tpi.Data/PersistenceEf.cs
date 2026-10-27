@@ -2,23 +2,44 @@
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Data.Sqlite;
 
 namespace Dsw2026Tpi.Data;
 
 public class PersistenceEf: IPersistence
 {
     private readonly Dsw2026TpiDbContext _context;
+    private IDbContextTransaction? _transaction;
 
     public PersistenceEf(Dsw2026TpiDbContext context)
     {
         _context = context;
     }
 
+
     public async Task<T> Add<T>(T entity) where T : EntityBase
     {
         await _context.AddAsync(entity);
-        await _context.SaveChangesAsync();
-        return entity;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+        catch (DbUpdateException ex)
+            when (entity is Appointment &&
+              ex.InnerException is SqliteException sqliteException &&
+              sqliteException.SqliteErrorCode == 19 &&
+              sqliteException.SqliteExtendedErrorCode == 2067 &&
+              sqliteException.Message.Contains(
+                "Appointments.AvailabilitySlotId",
+               StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Dsw2026Tpi.CrossCutting.Exceptions.ConflictException(
+                    Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT,
+                    nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT));
+            }
     }
 
     public async Task<T> Delete<T>(T entity) where T : EntityBase
@@ -112,4 +133,51 @@ public class PersistenceEf: IPersistence
         }
         return includedQuery;
     }
+
+
+    public async Task BeginTransactionAsync()
+    {
+        if (_transaction != null)
+        {
+            throw new InvalidOperationException(
+                "Ya existe una transacción activa.");
+        }
+
+        _transaction = await _context.Database.BeginTransactionAsync();
+    }
+
+    public async Task CommitTransactionAsync()
+    {
+        if (_transaction == null)
+        {
+            throw new InvalidOperationException(
+                "No existe una transacción activa para confirmar.");
+        }
+
+        await _transaction.CommitAsync();
+
+        await _transaction.DisposeAsync();
+        _transaction = null;
+    }
+
+    public async Task RollbackTransactionAsync()
+    {
+        if (_transaction == null)
+        {
+            return;
+        }
+
+        var transaction = _transaction;
+
+        try
+        {
+            await transaction.RollbackAsync();
+        }
+        finally
+        {
+            await transaction.DisposeAsync();
+            _transaction = null;
+        }
+    }
+
 }
