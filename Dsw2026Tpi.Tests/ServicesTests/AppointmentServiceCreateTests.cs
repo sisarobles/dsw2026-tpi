@@ -7,6 +7,7 @@ using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using NSubstitute;
 using Xunit;
+using System.Linq.Expressions;
 
 namespace Dsw2026Tpi.Tests.ServicesTests
 {
@@ -29,18 +30,19 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             // Arrange
             var doctorId = Guid.NewGuid();
             const long dni = 30123456;
+            var tomorrow = DateTime.UtcNow.AddDays(1);
 
             var rule = new AvailabilityRule(
                 doctorId,
-                DateTime.UtcNow.AddDays(1).Month,
-                DateTime.UtcNow.AddDays(1).Year,
-                DateTime.UtcNow.AddDays(1).DayOfWeek,
+                tomorrow.Month,
+                tomorrow.Year,
+                tomorrow.DayOfWeek,
                 new TimeOnly(9, 0),
                 new TimeOnly(12, 0));
 
             var slot = new AvailabilitySlot(
                 rule.Id,
-                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
+                DateOnly.FromDateTime(tomorrow),
                 new TimeOnly(9, 0),
                 new TimeOnly(9, 30));
 
@@ -55,14 +57,16 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 "Control médico");
 
             _persistence
-                .GetById<AvailabilitySlot>(
-                    slot.Id,
-                    Arg.Any<string[]>())
+                .GetById<AvailabilitySlot>(slot.Id, Arg.Any<string[]>())
                 .Returns(slot);
 
             _persistence
-                .First<Patient>(Arg.Any<System.Linq.Expressions.Expression<Func<Patient, bool>>>())
+                .First<Patient>(Arg.Any<Expression<Func<Patient, bool>>>())
                 .Returns(patient);
+
+            _persistence
+                .TryBookAvailabilitySlot(slot.Id)
+                .Returns(true);
 
             _persistence
                 .Add(Arg.Any<Appointment>())
@@ -72,9 +76,11 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             await _service.CreateAppointment("test-user", request);
 
             // Assert
-            Assert.Equal(SlotStatus.BOOKED, slot.Status);
             await _persistence.Received(1).BeginTransactionAsync();
-            await _persistence.Received(1).Update(slot);
+
+            await _persistence.Received(1)
+                .TryBookAvailabilitySlot(slot.Id);
+
             await _persistence.Received(1).Add(Arg.Any<Appointment>());
             await _persistence.Received(1).CommitTransactionAsync();
             await _persistence.DidNotReceive().RollbackTransactionAsync();
@@ -113,14 +119,16 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 "Control médico");
 
             _persistence
-                .GetById<AvailabilitySlot>(
-                    slot.Id,
-                    Arg.Any<string[]>())
+                .GetById<AvailabilitySlot>(slot.Id, Arg.Any<string[]>())
                 .Returns(slot);
 
             _persistence
-                .First<Patient>(Arg.Any<System.Linq.Expressions.Expression<Func<Patient, bool>>>())
+                .First<Patient>(Arg.Any<Expression<Func<Patient, bool>>>())
                 .Returns(patient);
+
+            _persistence
+                .TryBookAvailabilitySlot(slot.Id)
+                .Returns(true);
 
             _persistence
                 .Add(Arg.Any<Appointment>())
@@ -133,7 +141,68 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             // Assert
             await _persistence.Received(1).BeginTransactionAsync();
+            await _persistence.Received(1).TryBookAvailabilitySlot(slot.Id);
             await _persistence.Received(1).RollbackTransactionAsync();
+            await _persistence.DidNotReceive().CommitTransactionAsync();
+        }
+
+        [Fact]
+        public async Task CreateAppointment_CuandoElTurnoYaNoEstaDisponible_RevierteLaTransaccion()
+        {
+            // Arrange
+            var doctorId = Guid.NewGuid();
+            const long dni = 30123456;
+            var tomorrow = DateTime.UtcNow.AddDays(1);
+
+            var rule = new AvailabilityRule(
+                doctorId,
+                tomorrow.Month,
+                tomorrow.Year,
+                tomorrow.DayOfWeek,
+                new TimeOnly(9, 0),
+                new TimeOnly(12, 0));
+
+            var slot = new AvailabilitySlot(
+                rule.Id,
+                DateOnly.FromDateTime(tomorrow),
+                new TimeOnly(9, 0),
+                new TimeOnly(9, 30));
+
+            SetAvailabilityRule(slot, rule);
+
+            var patient = new Patient("test-user", dni, "Paciente de prueba");
+
+            var request = new AppointmentModel.Request(
+                doctorId,
+                slot.Id,
+                new AppointmentModel.PatientRequest(dni),
+                "Control médico");
+
+            _persistence
+                .GetById<AvailabilitySlot>(slot.Id, Arg.Any<string[]>())
+                .Returns(slot);
+
+            _persistence
+                .First<Patient>(Arg.Any<Expression<Func<Patient, bool>>>())
+                .Returns(patient);
+
+            _persistence
+                .TryBookAvailabilitySlot(slot.Id)
+                .Returns(false);
+
+            // Act
+            var exception = await Assert.ThrowsAsync<ConflictException>(
+                () => _service.CreateAppointment("test-user", request));
+
+            // Assert
+            Assert.Equal(
+                nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT),
+                exception.Error.ErrorCode);
+
+            await _persistence.Received(1).BeginTransactionAsync();
+            await _persistence.Received(1).TryBookAvailabilitySlot(slot.Id);
+            await _persistence.Received(1).RollbackTransactionAsync();
+            await _persistence.DidNotReceive().Add(Arg.Any<Appointment>());
             await _persistence.DidNotReceive().CommitTransactionAsync();
         }
 

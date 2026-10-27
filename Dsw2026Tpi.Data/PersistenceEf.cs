@@ -180,4 +180,18 @@ public class PersistenceEf: IPersistence
         }
     }
 
+    public async Task<bool> TryBookAvailabilitySlot(Guid slotId)
+    {
+        var affectedRows = await _context.Set<AvailabilitySlot>()
+            .Where(slot =>
+                slot.Id == slotId &&
+                slot.Status == SlotStatus.AVAILABLE &&
+                !slot.Deleted)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(
+                    slot => slot.Status,
+                    SlotStatus.BOOKED));
+
+        return affectedRows == 1;
+    }
 }

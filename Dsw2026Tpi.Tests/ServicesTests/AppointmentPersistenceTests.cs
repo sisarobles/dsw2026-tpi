@@ -129,5 +129,72 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             Assert.Contains("IX_Appointments_AvailabilitySlotId", indexes);
         }
+
+
+        [Fact]
+        public async Task TryBookAvailabilitySlot_CuandoDosOperacionesCompiten_SoloUnaReservaElTurno()
+        {
+            await using var connection =
+                new SqliteConnection("Data Source=:memory:");
+
+            await connection.OpenAsync();
+
+            var options = new DbContextOptionsBuilder<Dsw2026TpiDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            await using (var setupContext = new Dsw2026TpiDbContext(options))
+            {
+                await setupContext.Database.MigrateAsync();
+
+                await setupContext.Database.ExecuteSqlRawAsync(
+                    "PRAGMA foreign_keys = OFF;");
+
+                var slot = new AvailabilitySlot(
+                    Guid.NewGuid(),
+                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
+                    new TimeOnly(9, 0),
+                    new TimeOnly(9, 30));
+
+                setupContext.Set<AvailabilitySlot>().Add(slot);
+                await setupContext.SaveChangesAsync();
+            }
+
+            var slots = await GetSlotIds(options);
+            var slotId = Assert.Single(slots);
+
+            await using var context1 = new Dsw2026TpiDbContext(options);
+            await using var context2 = new Dsw2026TpiDbContext(options);
+
+            var persistence1 = new PersistenceEf(context1);
+            var persistence2 = new PersistenceEf(context2);
+
+            var results = await Task.WhenAll(
+                persistence1.TryBookAvailabilitySlot(slotId),
+                persistence2.TryBookAvailabilitySlot(slotId));
+
+            Assert.Equal(1, results.Count(result => result));
+            Assert.Equal(1, results.Count(result => !result));
+
+            await using var verificationContext =
+                new Dsw2026TpiDbContext(options);
+
+            var savedSlot = await verificationContext.Set<AvailabilitySlot>()
+                .AsNoTracking()
+                .SingleAsync(slot => slot.Id == slotId);
+
+            Assert.Equal(SlotStatus.BOOKED, savedSlot.Status);
+        }
+
+        private static async Task<List<Guid>> GetSlotIds(
+            DbContextOptions<Dsw2026TpiDbContext> options)
+        {
+            await using var context = new Dsw2026TpiDbContext(options);
+
+            return await context.Set<AvailabilitySlot>()
+                .Select(slot => slot.Id)
+                .ToListAsync();
+        }
+
     }
 }

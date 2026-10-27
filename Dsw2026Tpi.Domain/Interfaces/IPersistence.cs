@@ -16,5 +16,5 @@ public interface IPersistence
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();
-
+    Task<bool> TryBookAvailabilitySlot(Guid slotId);
 }

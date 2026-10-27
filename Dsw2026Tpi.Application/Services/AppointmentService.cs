@@ -52,8 +52,14 @@ namespace Dsw2026Tpi.Application.Services
 
             try
             {
-                slot.Book();
-                await _persistence.Update(slot);
+                var slotBooked = await _persistence.TryBookAvailabilitySlot(slot.Id);
+
+                if (!slotBooked)
+                {
+                    throw new ConflictException(
+                        ErrorCodes.APPOINTMENT_CONFLICT,
+                        nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+                }
 
                 appointment = new Appointment(patientId, slot.Id, request.Reason);
                 await _persistence.Add(appointment);
