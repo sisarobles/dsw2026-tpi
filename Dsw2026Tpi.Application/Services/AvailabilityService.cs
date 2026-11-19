@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Application.Dtos;
+﻿
+using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Extensions;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
@@ -14,30 +15,40 @@ namespace Dsw2026Tpi.Application.Services
         private readonly IFeriadoService _feriadoService;
         private readonly ILogService _logger;
 
-        public AvailabilityService(IPersistence persistence, IFeriadoService feriadoService, ILogService logger)
+        public AvailabilityService(
+            IPersistence persistence,
+            IFeriadoService feriadoService,
+            ILogService logger)
         {
             _persistence = persistence;
             _feriadoService = feriadoService;
             _logger = logger;
         }
-        public async Task<IEnumerable<AvailabilityModel.Response>> CreateAvailability(AvailabilityModel.Request request)
+
+        public async Task<IEnumerable<AvailabilityModel.Response>> CreateAvailability(
+            AvailabilityModel.Request request)
         {
             await GetActiveDoctorOrThrow(request.DoctorId);
 
             var now = DateTime.UtcNow;
-            var response = await CreateRulesAndSlots(request, now.Month, now.Year,
-            DateOnly.FromDateTime(now),
-            DateTime.DaysInMonth(now.Year, now.Month));
+
+            var response = await CreateRulesAndSlots(
+                request,
+                now.Month,
+                now.Year,
+                DateOnly.FromDateTime(now),
+                DateTime.DaysInMonth(now.Year, now.Month));
 
             await _logger.RegistrarAsync(
-            modulo: "Availability",
-            accion: "CreateAvailability",
-            detalle: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s)");
+                modulo: "Availability",
+                accion: "CreateAvailability",
+                detalle: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s)");
 
             return response;
         }
 
-        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(Guid doctorId)  
+        public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(
+            Guid doctorId)
         {
             await GetActiveDoctorOrThrow(doctorId);
 
@@ -45,39 +56,50 @@ namespace Dsw2026Tpi.Application.Services
 
             var rules = await _persistence.GetFiltered<AvailabilityRule>(
                 r => r.DoctorId == doctorId &&
-                r.Month == now.Month &&
-                r.Year == now.Year &&
-                !r.Deleted);
+                     r.Month == now.Month &&
+                     r.Year == now.Year &&
+                     !r.Deleted);
 
             return rules!.Select(r => new AvailabilityModel.Response(
                 r.Id,
                 r.DayOfWeek.ToSpanish(),
                 r.StartTime,
-                r.EndTime
-            ));
+                r.EndTime));
         }
 
-        public async Task<IEnumerable<AvailabilityModel.Response>> UpdateAvailability(AvailabilityModel.Request request)
+        public async Task<IEnumerable<AvailabilityModel.Response>> UpdateAvailability(
+            AvailabilityModel.Request request)
         {
             await GetActiveDoctorOrThrow(request.DoctorId);
 
             var now = DateTime.UtcNow;
-            var reglasBorradas = await DeleteExistingRules(request.DoctorId, now.Month, now.Year);
+
+            var reglasBorradas = await DeleteExistingRules(
+                request.DoctorId,
+                now.Month,
+                now.Year);
 
             var response = await CreateRulesAndSlots(
-                request, now.Month, now.Year,
+                request,
+                now.Month,
+                now.Year,
                 DateOnly.FromDateTime(now),
                 DateTime.DaysInMonth(now.Year, now.Month));
 
             await _logger.RegistrarAsync(
-            modulo: "Availability",
-            accion: "UpdateAvailability",
-            detalle: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s)");
+                modulo: "Availability",
+                accion: "UpdateAvailability",
+                detalle: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s)");
 
             return response;
         }
 
-        private async Task<List<AvailabilityModel.Response>> CreateRulesAndSlots(AvailabilityModel.Request request,int month,int year, DateOnly today,int daysInMonth)
+        private async Task<List<AvailabilityModel.Response>> CreateRulesAndSlots(
+            AvailabilityModel.Request request,
+            int month,
+            int year,
+            DateOnly today,
+            int daysInMonth)
         {
             var response = new List<AvailabilityModel.Response>();
 
@@ -87,27 +109,44 @@ namespace Dsw2026Tpi.Application.Services
 
                 try
                 {
-                    await dayRequest.ValidateNoOverlap(_persistence, request.DoctorId, month, year);
+                    await dayRequest.ValidateNoOverlap(
+                        _persistence,
+                        request.DoctorId,
+                        month,
+                        year);
                 }
                 catch (BusinessRuleException)
                 {
                     await _logger.RegistrarAsync(
-                    modulo: "Availability",
-                    accion: "CreateAvailability",
-                    detalle: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
-                    nivel: LogNivel.Warning);
-                    throw; 
+                        modulo: "Availability",
+                        accion: "CreateAvailability",
+                        detalle: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
+                        nivel: LogNivel.Warning);
+
+                    throw;
                 }
 
                 var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
 
                 var rule = new AvailabilityRule(
-                    request.DoctorId, month, year,
-                    dayOfWeek, dayRequest.StartTime, dayRequest.EndTime);
+                    request.DoctorId,
+                    month,
+                    year,
+                    dayOfWeek,
+                    dayRequest.StartTime,
+                    dayRequest.EndTime);
 
-                var slots = dayRequest.GenerateSlots(rule.Id, today, daysInMonth, month, year, _feriadoService);
+                var validDates = Enumerable.Range(1, daysInMonth)
+                    .Select(day => new DateOnly(year, month, day))
+                    .Where(date =>
+                        date >= today &&
+                        date.DayOfWeek == dayOfWeek &&
+                        !_feriadoService.EsFeriado(date))
+                    .ToList();
 
-                if (!slots.Any())
+                rule.GenerateSlots(validDates);
+
+                if (!rule.Slots.Any())
                 {
                     continue;
                 }
@@ -115,28 +154,36 @@ namespace Dsw2026Tpi.Application.Services
                 await _persistence.Add(rule);
 
                 response.Add(new AvailabilityModel.Response(
-                rule.Id,
-                rule.DayOfWeek.ToSpanish(),
-                rule.StartTime,
-                rule.EndTime));
+                    rule.Id,
+                    rule.DayOfWeek.ToSpanish(),
+                    rule.StartTime,
+                    rule.EndTime));
 
-                foreach (var slot in slots)
+                foreach (var slot in rule.Slots)
                 {
                     await _persistence.Add(slot);
-                 
                 }
             }
 
             return response;
         }
+
         private async Task<Doctor> GetActiveDoctorOrThrow(Guid doctorId)
         {
             var doctor = await _persistence.GetById<Doctor>(doctorId);
+
             if (doctor == null || !doctor.IsActive)
+            {
                 throw new EntityNotFoundException(nameof(Doctor));
+            }
+
             return doctor;
         }
-        private async Task<int> DeleteExistingRules(Guid doctorId, int month, int year)
+
+        private async Task<int> DeleteExistingRules(
+            Guid doctorId,
+            int month,
+            int year)
         {
             var reglasExistentes = await _persistence.GetFiltered<AvailabilityRule>(
                 r => r.DoctorId == doctorId &&
@@ -155,10 +202,11 @@ namespace Dsw2026Tpi.Application.Services
                 catch (BusinessRuleException)
                 {
                     await _logger.RegistrarAsync(
-                    modulo: "Availability",
-                    accion: "UpdateAvailability",
-                    detalle: $"No se pudo eliminar la regla {regla.Id} del doctor {doctorId}: existen turnos reservados",
-                    nivel: LogNivel.Warning);
+                        modulo: "Availability",
+                        accion: "UpdateAvailability",
+                        detalle: $"No se pudo eliminar la regla {regla.Id} del doctor {doctorId}: existen turnos reservados",
+                        nivel: LogNivel.Warning);
+
                     throw;
                 }
             }
@@ -166,7 +214,11 @@ namespace Dsw2026Tpi.Application.Services
             return cantidad;
         }
 
-        public async Task<Pagination<AvailabilityModel.SlotResponse>> GetAvailableSlots(Guid doctorId,int pageSize,int pageIndex,DateOnly? date = null)
+        public async Task<Pagination<AvailabilityModel.SlotResponse>> GetAvailableSlots(
+            Guid doctorId,
+            int pageSize,
+            int pageIndex,
+            DateOnly? date = null)
         {
             await GetActiveDoctorOrThrow(doctorId);
 
@@ -189,5 +241,4 @@ namespace Dsw2026Tpi.Application.Services
                 s.EndTime));
         }
     }
-    
 }
