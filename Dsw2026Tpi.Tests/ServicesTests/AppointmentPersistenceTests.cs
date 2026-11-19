@@ -1,5 +1,4 @@
-﻿
-using Dsw2026Tpi.CrossCutting.Exceptions;
+﻿using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.Data;
 using Dsw2026Tpi.Domain.Entities;
 using Microsoft.Data.Sqlite;
@@ -82,7 +81,17 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             await persistence.Add(previousAppointment);
 
-            previousAppointment.Cancel();
+            var slot = new AvailabilitySlot(
+                Guid.NewGuid(),
+                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
+                new TimeOnly(9, 0),
+                new TimeOnly(9, 30),
+                slotId);
+
+            slot.Book();
+
+            previousAppointment.Cancel(slot);
+
             await persistence.Update(previousAppointment);
 
             var newAppointment = new Appointment(
@@ -94,6 +103,7 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             Assert.Equal(newAppointment.Id, result.Id);
             Assert.Equal(Estado.CANCELLED, previousAppointment.Estado);
+            Assert.Equal(SlotStatus.AVAILABLE, slot.Status);
             Assert.Equal(Estado.BOOKED, newAppointment.Estado);
         }
 
