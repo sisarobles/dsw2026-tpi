@@ -95,20 +95,10 @@ public static class SecurityConfigurationExtensions
         {
             options.AddDefaultPolicy(policy =>
             {
-                if (environment.IsDevelopment())
-                {
-                    policy.SetIsOriginAllowed(_ => true)
-                         .AllowAnyHeader()
-                         .AllowAnyMethod()
-                         .AllowCredentials();
-                }
-                else
-                {
-                    policy.WithOrigins(allowedOrigins)
-                         .AllowAnyHeader()
-                         .AllowAnyMethod()
-                         .AllowCredentials();
-                }
+                policy.WithOrigins(allowedOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 

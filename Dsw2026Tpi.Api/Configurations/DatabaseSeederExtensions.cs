@@ -53,16 +53,22 @@ if (string.IsNullOrWhiteSpace(email) ||
             };
 
             var result = await userManager.CreateAsync(admin, password);
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(admin, Roles.Administrator);
-                Log.Information("Admin inicial creado: {Email}", email);
-            }
-            else
-            {
-                Log.Error("Error creando admin: {Errors}",
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Error creando el administrador inicial: {errors}");
+        }
+
+        var roleResult = await userManager.AddToRoleAsync(admin, Roles.Administrator);
+
+        if (!roleResult.Succeeded)
+        {
+            var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Error asignando el rol de administrador: {errors}");
+        }
+
+        Log.Information("Admin inicial creado: {Email}", email);
         }
     }
 }

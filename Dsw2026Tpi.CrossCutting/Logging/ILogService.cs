@@ -2,17 +2,17 @@
 {
     public interface ILogService
     {
-        Task RegistrarAsync(
-            string modulo,
-            string accion,
-            string detalle,
-            LogNivel nivel = LogNivel.Info);
-
+        Task LogAsync(
+            string module,
+            string action,
+            string detail,
+            LogLevel level = LogLevel.Information);
     }
-    public enum LogNivel
+
+    public enum LogLevel
     {
-        Info,
+        Information,
         Warning,
-        Error 
+        Error
     }
 }

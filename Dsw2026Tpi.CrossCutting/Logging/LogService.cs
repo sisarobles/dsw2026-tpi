@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using AppLogLevel = Dsw2026Tpi.CrossCutting.Logging.LogLevel;
 
 namespace Dsw2026Tpi.CrossCutting.Logging;
 
@@ -11,24 +12,24 @@ public class LogService : ILogService
         _logger = logger;
     }
 
-    public Task RegistrarAsync(
-        string modulo,
-        string accion,
-        string detalle,
-        LogNivel nivel = LogNivel.Info)
+    public Task LogAsync(
+        string module,
+        string action,
+        string detail,
+        AppLogLevel level = AppLogLevel.Information)
     {
-        var mensaje = $"[{modulo}] {accion} - {detalle}";
+        var message = $"[{module}] {action} - {detail}";
 
-        switch (nivel)
+        switch (level)
         {
-            case LogNivel.Warning:
-                _logger.LogWarning(mensaje);
+            case AppLogLevel.Warning:
+                _logger.LogWarning(message);
                 break;
-            case LogNivel.Error:
-                _logger.LogError(mensaje);
+            case AppLogLevel.Error:
+                _logger.LogError(message);
                 break;
             default:
-                _logger.LogInformation(mensaje);
+                _logger.LogInformation(message);
                 break;
         }
 

@@ -39,10 +39,10 @@ namespace Dsw2026Tpi.Application.Services
                 DateOnly.FromDateTime(now),
                 DateTime.DaysInMonth(now.Year, now.Month));
 
-            await _logger.RegistrarAsync(
-                modulo: "Availability",
-                accion: "CreateAvailability",
-                detalle: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s)");
+            await _logger.LogAsync(
+            module: "Availability",
+            action: "CreateAvailability",
+            detail: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s)");
 
             return response;
         }
@@ -86,10 +86,10 @@ namespace Dsw2026Tpi.Application.Services
                 DateOnly.FromDateTime(now),
                 DateTime.DaysInMonth(now.Year, now.Month));
 
-            await _logger.RegistrarAsync(
-                modulo: "Availability",
-                accion: "UpdateAvailability",
-                detalle: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s)");
+            await _logger.LogAsync(
+            module: "Availability",
+            action: "UpdateAvailability",
+            detail: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s)");
 
             return response;
         }
@@ -117,13 +117,12 @@ namespace Dsw2026Tpi.Application.Services
                 }
                 catch (BusinessRuleException)
                 {
-                    await _logger.RegistrarAsync(
-                        modulo: "Availability",
-                        accion: "CreateAvailability",
-                        detalle: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
-                        nivel: LogNivel.Warning);
-
-                    throw;
+                    await _logger.LogAsync(
+                    module: "Availability",
+                    action: "CreateAvailability",
+                    detail: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
+                    level: LogLevel.Warning);
+                    throw; 
                 }
 
                 var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
@@ -201,12 +200,11 @@ namespace Dsw2026Tpi.Application.Services
                 }
                 catch (BusinessRuleException)
                 {
-                    await _logger.RegistrarAsync(
-                        modulo: "Availability",
-                        accion: "UpdateAvailability",
-                        detalle: $"No se pudo eliminar la regla {regla.Id} del doctor {doctorId}: existen turnos reservados",
-                        nivel: LogNivel.Warning);
-
+                    await _logger.LogAsync(
+                    module: "Availability",
+                    action: "UpdateAvailability",
+                    detail: $"No se pudo eliminar la regla {regla.Id} del doctor {doctorId}: existen turnos reservados",
+                    level: LogLevel.Warning);
                     throw;
                 }
             }
@@ -227,7 +225,7 @@ namespace Dsw2026Tpi.Application.Services
             return (await _persistence.Paginate<AvailabilitySlot, DateOnly>(
                 pageSize,
                 pageIndex,
-                s => s.AvailabilityRule.DoctorId == doctorId &&
+                s => s.AvailabilityRule!.DoctorId == doctorId &&
                      s.Status == SlotStatus.AVAILABLE &&
                      s.SlotDate >= today &&
                      !s.Deleted &&

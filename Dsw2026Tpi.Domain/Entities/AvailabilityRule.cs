@@ -11,7 +11,7 @@ namespace Dsw2026Tpi.Domain.Entities
         public TimeOnly StartTime { get; private set; }
         public TimeOnly EndTime { get; private set; }
         public bool Deleted { get; private set; }
-        public ICollection<AvailabilitySlot> Slots { get; private set; }
+        public ICollection<AvailabilitySlot> Slots { get; private set; } = new List<AvailabilitySlot>();
 
         // Constructor para EF
         private AvailabilityRule()
