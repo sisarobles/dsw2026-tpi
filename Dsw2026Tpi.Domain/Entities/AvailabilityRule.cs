@@ -1,5 +1,4 @@
-﻿
-namespace Dsw2026Tpi.Domain.Entities
+﻿namespace Dsw2026Tpi.Domain.Entities
 {
     public class AvailabilityRule : EntityBase
     {
@@ -11,9 +10,10 @@ namespace Dsw2026Tpi.Domain.Entities
         public TimeOnly StartTime { get; private set; }
         public TimeOnly EndTime { get; private set; }
         public bool Deleted { get; private set; }
-        public ICollection<AvailabilitySlot> Slots { get; private set; } = new List<AvailabilitySlot>();
 
-        // Constructor para EF
+        public ICollection<AvailabilitySlot> Slots { get; private set; }
+            = new List<AvailabilitySlot>();
+
         private AvailabilityRule()
         {
             Slots = new List<AvailabilitySlot>();
@@ -36,6 +36,11 @@ namespace Dsw2026Tpi.Domain.Entities
             EndTime = endTime;
             Deleted = false;
             Slots = new List<AvailabilitySlot>();
+        }
+
+        public void MarkAsDeleted()
+        {
+            Deleted = true;
         }
 
         public void GenerateSlots(IEnumerable<DateOnly> dates)

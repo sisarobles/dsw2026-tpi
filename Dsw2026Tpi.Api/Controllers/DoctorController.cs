@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers;
 
 [Route("api/doctors")]
-[Authorize(Policy = Policies.AdminPolicy)]
+[Authorize]
 public class DoctorController : AppController
 {
     private readonly IDoctorService _service;
@@ -21,9 +21,13 @@ public class DoctorController : AppController
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll([FromQuery]int pageSize = 10, [FromQuery]int pageIndex = 1, [FromQuery]string? name = null)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int pageSize = 10,
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] string? name = null,
+        [FromQuery] Guid? specialtyId = null)
     {
-        var doctors = await _service.GetAll(pageSize, pageIndex, name);
+        var doctors = await _service.GetAll(pageSize, pageIndex, name, specialtyId);
         return Ok(doctors);
     }
 
@@ -45,6 +49,7 @@ public class DoctorController : AppController
         return Ok(result);
     }
 
+    [Authorize(Policy = Policies.AdminPolicy)]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] DoctorModel.Request request)
     {
@@ -52,6 +57,7 @@ public class DoctorController : AppController
         return Created(string.Empty, result);
     }
 
+    [Authorize(Policy = Policies.AdminPolicy)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
@@ -59,12 +65,13 @@ public class DoctorController : AppController
 
         if (!success)
         {
-            return NotFound(); 
+            return NotFound();
         }
 
-        return Ok("ok"); 
+        return Ok("ok");
     }
 
+    [Authorize(Policy = Policies.AdminPolicy)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] DoctorModel.Request request)
     {

@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -20,14 +19,27 @@ public class JwtService
     {
         var jwtConfig = _config.GetSection("Jwt");
 
-        var keyText = jwtConfig["Key"]
-            ?? throw new InvalidOperationException("Falta configurar Jwt:Key.");
+        var keyText = jwtConfig["Key"];
+        var issuer = jwtConfig["Issuer"];
+        var audience = jwtConfig["Audience"];
 
-        var issuer = jwtConfig["Issuer"]
-            ?? throw new InvalidOperationException("Falta configurar Jwt:Issuer.");
+        if (string.IsNullOrWhiteSpace(keyText))
+        {
+            throw new InvalidOperationException(
+                "Falta configurar Jwt:Key.");
+        }
 
-        var audience = jwtConfig["Audience"]
-            ?? throw new InvalidOperationException("Falta configurar Jwt:Audience.");
+        if (string.IsNullOrWhiteSpace(issuer))
+        {
+            throw new InvalidOperationException(
+                "Falta configurar Jwt:Issuer.");
+        }
+
+        if (string.IsNullOrWhiteSpace(audience))
+        {
+            throw new InvalidOperationException(
+                "Falta configurar Jwt:Audience.");
+        }
 
         var keyBytes = Encoding.UTF8.GetBytes(keyText);
 
@@ -40,15 +52,20 @@ public class JwtService
         if (!int.TryParse(jwtConfig["ExpiresInMinutes"], out var expiresIn)
             || expiresIn <= 0)
         {
-            expiresIn = 60;
+            throw new InvalidOperationException(
+                "Jwt:ExpiresInMinutes debe ser un número entero mayor que cero.");
         }
 
         var key = new SymmetricSecurityKey(keyBytes);
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var credentials = new SigningCredentials(
+            key,
+            SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.NameIdentifier, userId),
             new(ClaimTypes.Name, username)
         };
@@ -63,7 +80,7 @@ public class JwtService
             audience: audience,
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(expiresIn),
-            signingCredentials: creds
+            signingCredentials: credentials
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);

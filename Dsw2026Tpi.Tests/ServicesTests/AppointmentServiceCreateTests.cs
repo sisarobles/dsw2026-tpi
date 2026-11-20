@@ -1,5 +1,4 @@
-﻿
-using Dsw2026Tpi.Application.Dtos;
+﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Services;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Logging;
@@ -32,6 +31,8 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             const long dni = 30123456;
             var tomorrow = DateTime.UtcNow.AddDays(1);
 
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+
             var rule = new AvailabilityRule(
                 doctorId,
                 tomorrow.Month,
@@ -59,6 +60,10 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             _persistence
                 .GetById<AvailabilitySlot>(slot.Id, Arg.Any<string[]>())
                 .Returns(slot);
+
+            _persistence
+                .GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
             _persistence
                 .First<Patient>(Arg.Any<Expression<Func<Patient, bool>>>())
@@ -96,6 +101,8 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             const long dni = 30123456;
             var tomorrow = DateTime.UtcNow.AddDays(1);
 
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+
             var rule = new AvailabilityRule(
                 doctorId,
                 tomorrow.Month,
@@ -123,6 +130,10 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             _persistence
                 .GetById<AvailabilitySlot>(slot.Id, Arg.Any<string[]>())
                 .Returns(slot);
+
+            _persistence
+                .GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
             _persistence
                 .First<Patient>(Arg.Any<Expression<Func<Patient, bool>>>())
@@ -156,6 +167,8 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             const long dni = 30123456;
             var tomorrow = DateTime.UtcNow.AddDays(1);
 
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+
             var rule = new AvailabilityRule(
                 doctorId,
                 tomorrow.Month,
@@ -183,6 +196,10 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             _persistence
                 .GetById<AvailabilitySlot>(slot.Id, Arg.Any<string[]>())
                 .Returns(slot);
+
+            _persistence
+                .GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
             _persistence
                 .First<Patient>(Arg.Any<Expression<Func<Patient, bool>>>())

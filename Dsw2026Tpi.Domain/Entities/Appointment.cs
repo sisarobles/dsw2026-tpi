@@ -1,5 +1,4 @@
-﻿
-using Dsw2026Tpi.CrossCutting.Exceptions;
+﻿using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 
 namespace Dsw2026Tpi.Domain.Entities

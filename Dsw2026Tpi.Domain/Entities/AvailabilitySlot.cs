@@ -9,6 +9,7 @@ namespace Dsw2026Tpi.Domain.Entities
         BOOKED,
         BLOCKED
     }
+
     public class AvailabilitySlot : EntityBase
     {
         public Guid AvailabilityRuleId { get; set; }
@@ -19,9 +20,14 @@ namespace Dsw2026Tpi.Domain.Entities
         public TimeOnly EndTime { get; private set; }
         public bool Deleted { get; private set; }
 
-        //Contructor para EF
         private AvailabilitySlot() { }
-        public AvailabilitySlot(Guid availabilityRuleId, DateOnly slotDate, TimeOnly startTime, TimeOnly endTime, Guid? id = null) : base(id)
+
+        public AvailabilitySlot(
+            Guid availabilityRuleId,
+            DateOnly slotDate,
+            TimeOnly startTime,
+            TimeOnly endTime,
+            Guid? id = null) : base(id)
         {
             AvailabilityRuleId = availabilityRuleId;
             Status = SlotStatus.AVAILABLE;
@@ -30,18 +36,29 @@ namespace Dsw2026Tpi.Domain.Entities
             EndTime = endTime;
             Deleted = false;
         }
-    
+
+        public void MarkAsDeleted()
+        {
+            Deleted = true;
+        }
+
         public void Book()
         {
             if (Status != SlotStatus.AVAILABLE)
-                throw new ConflictException(ErrorCodes.AVAILABILITY_SLOT_NOT_AVAILABLE, nameof(ErrorCodes.AVAILABILITY_SLOT_NOT_AVAILABLE));
+                throw new ConflictException(
+                    ErrorCodes.AVAILABILITY_SLOT_NOT_AVAILABLE,
+                    nameof(ErrorCodes.AVAILABILITY_SLOT_NOT_AVAILABLE));
+
             Status = SlotStatus.BOOKED;
         }
 
         public void Release()
         {
             if (Status != SlotStatus.BOOKED)
-                throw new ConflictException(ErrorCodes.AVAILABILITY_SLOT_NOT_BOOKED, nameof(ErrorCodes.AVAILABILITY_SLOT_NOT_BOOKED));
+                throw new ConflictException(
+                    ErrorCodes.AVAILABILITY_SLOT_NOT_BOOKED,
+                    nameof(ErrorCodes.AVAILABILITY_SLOT_NOT_BOOKED));
+
             Status = SlotStatus.AVAILABLE;
         }
     }

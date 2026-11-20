@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Dsw2026Tpi.Api.Controllers;
 
-
 [Route("api/specialties")]
-[Authorize(Policy = Policies.AdminPolicy)]
+[Authorize]
 public class SpecialitiesController : AppController
 {
     private readonly ISpecialityService _specialityService;
@@ -19,7 +18,10 @@ public class SpecialitiesController : AppController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int pageSize = 10, [FromQuery] int pageIndex = 1, [FromQuery] string? name = null)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int pageSize = 10,
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] string? name = null)
     {
         var specialities = await _specialityService.GetAllAsync(pageSize, pageIndex, name);
         return Ok(specialities);
@@ -34,6 +36,7 @@ public class SpecialitiesController : AppController
         return Ok(speciality);
     }
 
+    [Authorize(Policy = Policies.AdminPolicy)]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] SpecialityModel.Request request)
     {
@@ -41,6 +44,7 @@ public class SpecialitiesController : AppController
         return Created(string.Empty, result);
     }
 
+    [Authorize(Policy = Policies.AdminPolicy)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Deactivate(Guid id)
     {
@@ -50,6 +54,7 @@ public class SpecialitiesController : AppController
         return Ok("ok");
     }
 
+    [Authorize(Policy = Policies.AdminPolicy)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] SpecialityModel.Request request)
     {

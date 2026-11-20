@@ -8,7 +8,12 @@ public class SignInService(SignInManager<ApplicationUser> signInManager) : ISign
 {
     public async Task<bool> CheckPassword(ApplicationUser user, string password)
     {
-        var result = await signInManager.CheckPasswordSignInAsync(user, password, false);
+        var result = await signInManager.CheckPasswordSignInAsync(
+            user,
+            password,
+            lockoutOnFailure: true
+        );
+
         return result.Succeeded;
     }
 }

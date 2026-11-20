@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Application.Dtos;
+﻿
+using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Helpers;
@@ -16,57 +17,101 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ISignInService _signInManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly JwtService _jwtService;
     private readonly IPersistence _persistence;
     private readonly ILogService _logService;
 
-    public AuthenticationService(UserManager<ApplicationUser> userManager,
+    public AuthenticationService(
+        UserManager<ApplicationUser> userManager,
         ISignInService signInManager,
-        RoleManager<IdentityRole> roleManager,
         JwtService jwtService,
         IPersistence persistence,
         ILogService logService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _roleManager = roleManager;
         _jwtService = jwtService;
         _persistence = persistence;
         _logService = logService;
     }
- 
-    public async Task<LoginAdminModel.Response> LoginAdmin(LoginAdminModel.Request request)
-    {
-        if (!request.Email.IsEmailValid()) 
-        throw new AuthenticationException();
-      
-        var user = await _userManager.FindByEmailAsync(request.Email) 
-            ?? throw new AuthenticationException();
-        var result = await _signInManager.CheckPassword(user, request.Password);
 
-        if (!result)
-        { 
-            await _logService.LogAsync("Auth", "LOGIN_ADMIN_FAILED", $"Intento de login fallido para {request.Email}", LogLevel.Warning);
+    public async Task<LoginAdminModel.Response> LoginAdmin(
+        LoginAdminModel.Request request)
+    {
+        if (!request.Email.IsEmailValid())
+            throw new AuthenticationException();
+
+        var user = await _userManager.FindByEmailAsync(request.Email)
+            ?? throw new AuthenticationException();
+
+        var passwordIsValid = await _signInManager.CheckPassword(
+            user,
+            request.Password);
+
+        if (!passwordIsValid)
+        {
+            await _logService.LogAsync(
+                "Auth",
+                "LOGIN_ADMIN_FAILED",
+                $"Intento de login fallido para {request.Email}",
+                LogLevel.Warning);
+
             throw new AuthenticationException();
         }
 
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+        if (user.Deleted)
+        {
+            await _logService.LogAsync(
+                "Auth",
+                "LOGIN_ADMIN_FAILED",
+                $"Intento de login de usuario eliminado: {request.Email}",
+                LogLevel.Warning);
 
-        var token = _jwtService.GenerateToken(user.Id, user.UserName!, role); await _logService.LogAsync("Auth", "LOGIN_ADMIN_SUCCESS", $"Login exitoso para {request.Email}");
+            throw new AuthenticationException();
+        }
+
+        var isAdministrator = await _userManager.IsInRoleAsync(
+            user,
+            Roles.Administrator);
+
+        if (!isAdministrator)
+        {
+            await _logService.LogAsync(
+                "Auth",
+                "LOGIN_ADMIN_FAILED",
+                $"Intento de acceso administrativo sin rol de administrador: {request.Email}",
+                LogLevel.Warning);
+
+            throw new AuthenticationException();
+        }
+
+        var token = _jwtService.GenerateToken(
+            user.Id,
+            user.UserName!,
+            Roles.Administrator);
+
+        await _logService.LogAsync(
+            "Auth",
+            "LOGIN_ADMIN_SUCCESS",
+            $"Login exitoso para {request.Email}");
 
         return new LoginAdminModel.Response(
             token,
-            role
-       
-        );
+            Roles.Administrator);
     }
-    public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Request request)
+
+    public async Task<LoginPatientModel.Response> LoginPatient(
+        LoginPatientModel.Request request)
     {
-        if (!request.Email.IsEmailValid()) throw new AuthenticationException();
+        if (!request.Email.IsEmailValid())
+            throw new AuthenticationException();
 
         if (request.Dni < 1_000_000 || request.Dni > 99_999_999)
-            throw new ValidationException(ErrorCodes.PATIENT_INVALID_DNI, nameof(ErrorCodes.PATIENT_INVALID_DNI));
+        {
+            throw new ValidationException(
+                ErrorCodes.PATIENT_INVALID_DNI,
+                nameof(ErrorCodes.PATIENT_INVALID_DNI));
+        }
 
         var user = await _userManager.FindByEmailAsync(request.Email);
 
@@ -77,41 +122,125 @@ public class AuthenticationService : IAuthenticationService
             var createResult = await _userManager.CreateAsync(user);
 
             if (!createResult.Succeeded)
-                throw new ConflictException(ErrorCodes.REGISTER_USER_CONFLICT, nameof(ErrorCodes.REGISTER_USER_CONFLICT))
-                    .WithDetail(createResult.Errors.Select(e => (e.Code, e.Description)));
+            {
+                var exception = new ConflictException(
+                    ErrorCodes.REGISTER_USER_CONFLICT,
+                    nameof(ErrorCodes.REGISTER_USER_CONFLICT));
 
-            _ = await _userManager.AddToRoleAsync(user, Roles.Patient);
+                exception.WithDetail(
+                    createResult.Errors.Select(
+                        error => (error.Code, error.Description)));
+
+                throw exception;
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(
+                user,
+                Roles.Patient);
+
+            if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(user);
+
+                var exception = new ConflictException(
+                    ErrorCodes.REGISTER_USER_CONFLICT,
+                    nameof(ErrorCodes.REGISTER_USER_CONFLICT));
+
+                exception.WithDetail(
+                    roleResult.Errors.Select(
+                        error => (error.Code, error.Description)));
+
+                throw exception;
+            }
 
             var newPatient = new Patient(user.Id, request.Dni);
-            await _persistence.Add(newPatient);
 
-            await _logService.LogAsync("Auth", "PATIENT_AUTO_REGISTERED", $"Paciente auto-registrado: {request.Email}");
+            try
+            {
+                await _persistence.Add(newPatient);
+            }
+            catch
+            {
+                // Si falla la creación del paciente, intentamos
+                // eliminar el usuario creado en Identity.
+                await _userManager.DeleteAsync(user);
+                throw;
+            }
+
+            await _logService.LogAsync(
+                "Auth",
+                "PATIENT_AUTO_REGISTERED",
+                $"Paciente auto-registrado: {request.Email}");
         }
         else
         {
-            var existingPatient = await _persistence.First<Patient>(p => p.UserId == user.Id)
+            if (user.Deleted)
+            {
+                await _logService.LogAsync(
+                    "Auth",
+                    "LOGIN_PATIENT_FAILED",
+                    $"Intento de login de usuario eliminado: {request.Email}",
+                    LogLevel.Warning);
+
+                throw new AuthenticationException();
+            }
+
+            var isPatient = await _userManager.IsInRoleAsync(
+                user,
+                Roles.Patient);
+
+            if (!isPatient)
+            {
+                await _logService.LogAsync(
+                    "Auth",
+                    "LOGIN_PATIENT_FAILED",
+                    $"Usuario sin rol de paciente: {request.Email}",
+                    LogLevel.Warning);
+
+                throw new AuthenticationException();
+            }
+
+            var existingPatient = await _persistence.First<Patient>(
+                patient => patient.UserId == user.Id)
                 ?? throw new AuthenticationException();
 
             if (existingPatient.Dni != request.Dni)
             {
-                await _logService.LogAsync("Auth", "LOGIN_PATIENT_FAILED", $"DNI no coincide para {request.Email}", LogLevel.Warning);
+                await _logService.LogAsync(
+                    "Auth",
+                    "LOGIN_PATIENT_FAILED",
+                    $"DNI no coincide para {request.Email}",
+                    LogLevel.Warning);
+
                 throw new AuthenticationException();
             }
         }
 
-        var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-        var token = _jwtService.GenerateToken(user.Id, user.UserName!, role);
-        await _logService.LogAsync("Auth", "LOGIN_PATIENT_SUCCESS", $"Login exitoso para {request.Email}");
-        return new LoginPatientModel.Response(token, role);
+        var token = _jwtService.GenerateToken(
+            user.Id,
+            user.UserName!,
+            Roles.Patient);
+
+        await _logService.LogAsync(
+            "Auth",
+            "LOGIN_PATIENT_SUCCESS",
+            $"Login exitoso para {request.Email}");
+
+        return new LoginPatientModel.Response(
+            token,
+            Roles.Patient);
     }
 
-  
-
-    private static ApplicationUser CreateApplicationUser(string email) => new()
+    private static ApplicationUser CreateApplicationUser(string email)
     {
-        UserName = email,
-        Email = email,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
-    };
+        var now = DateTime.UtcNow;
+
+        return new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+    }
 }
