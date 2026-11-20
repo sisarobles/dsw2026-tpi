@@ -30,21 +30,33 @@ namespace Dsw2026Tpi.Application.Services
         {
             await GetActiveDoctorOrThrow(request.DoctorId);
 
-            var now = DateTime.UtcNow;
+            var now = ArgentinaTime.Now;
 
-            var response = await CreateRulesAndSlots(
-                request,
-                now.Month,
-                now.Year,
-                DateOnly.FromDateTime(now),
-                DateTime.DaysInMonth(now.Year, now.Month));
+            await _persistence.BeginTransactionAsync();
 
-            await _logger.LogAsync(
-            module: "Availability",
-            action: "CreateAvailability",
-            detail: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s)");
+            try
+            {
+                var response = await CreateRulesAndSlots(
+                    request,
+                    now.Month,
+                    now.Year,
+                    DateOnly.FromDateTime(now),
+                    DateTime.DaysInMonth(now.Year, now.Month));
 
-            return response;
+                await _persistence.CommitTransactionAsync();
+
+                await _logger.LogAsync(
+                    module: "Availability",
+                    action: "CreateAvailability",
+                    detail: $"Disponibilidad creada para el doctor {request.DoctorId}: {request.Days.Count} día(s)");
+
+                return response;
+            }
+            catch
+            {
+                await _persistence.RollbackTransactionAsync();
+                throw;
+            }
         }
 
         public async Task<IEnumerable<AvailabilityModel.Response>> GetAvailabilitiesByDoctor(
@@ -52,7 +64,7 @@ namespace Dsw2026Tpi.Application.Services
         {
             await GetActiveDoctorOrThrow(doctorId);
 
-            var now = DateTime.UtcNow;
+            var now = ArgentinaTime.Now;
 
             var rules = await _persistence.GetFiltered<AvailabilityRule>(
                 r => r.DoctorId == doctorId &&
@@ -72,26 +84,38 @@ namespace Dsw2026Tpi.Application.Services
         {
             await GetActiveDoctorOrThrow(request.DoctorId);
 
-            var now = DateTime.UtcNow;
+            var now = ArgentinaTime.Now;
 
-            var reglasBorradas = await DeleteExistingRules(
-                request.DoctorId,
-                now.Month,
-                now.Year);
+            await _persistence.BeginTransactionAsync();
 
-            var response = await CreateRulesAndSlots(
-                request,
-                now.Month,
-                now.Year,
-                DateOnly.FromDateTime(now),
-                DateTime.DaysInMonth(now.Year, now.Month));
+            try
+            {
+                var reglasBorradas = await DeleteExistingRules(
+                    request.DoctorId,
+                    now.Month,
+                    now.Year);
 
-            await _logger.LogAsync(
-            module: "Availability",
-            action: "UpdateAvailability",
-            detail: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s)");
+                var response = await CreateRulesAndSlots(
+                    request,
+                    now.Month,
+                    now.Year,
+                    DateOnly.FromDateTime(now),
+                    DateTime.DaysInMonth(now.Year, now.Month));
 
-            return response;
+                await _persistence.CommitTransactionAsync();
+
+                await _logger.LogAsync(
+                    module: "Availability",
+                    action: "UpdateAvailability",
+                    detail: $"Disponibilidad del doctor {request.DoctorId} actualizada: {reglasBorradas} regla(s) reemplazada(s)");
+
+                return response;
+            }
+            catch
+            {
+                await _persistence.RollbackTransactionAsync();
+                throw;
+            }
         }
 
         private async Task<List<AvailabilityModel.Response>> CreateRulesAndSlots(
@@ -118,11 +142,12 @@ namespace Dsw2026Tpi.Application.Services
                 catch (BusinessRuleException)
                 {
                     await _logger.LogAsync(
-                    module: "Availability",
-                    action: "CreateAvailability",
-                    detail: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
-                    level: LogLevel.Warning);
-                    throw; 
+                        module: "Availability",
+                        action: "CreateAvailability",
+                        detail: $"Solapamiento detectado para el doctor {request.DoctorId}: {dayRequest.Day} {dayRequest.StartTime}-{dayRequest.EndTime}",
+                        level: LogLevel.Warning);
+
+                    throw;
                 }
 
                 var dayOfWeek = DayOfWeekExtensions.FromString(dayRequest.Day);
@@ -201,10 +226,11 @@ namespace Dsw2026Tpi.Application.Services
                 catch (BusinessRuleException)
                 {
                     await _logger.LogAsync(
-                    module: "Availability",
-                    action: "UpdateAvailability",
-                    detail: $"No se pudo eliminar la regla {regla.Id} del doctor {doctorId}: existen turnos reservados",
-                    level: LogLevel.Warning);
+                        module: "Availability",
+                        action: "UpdateAvailability",
+                        detail: $"No se pudo eliminar la regla {regla.Id} del doctor {doctorId}: existen turnos reservados",
+                        level: LogLevel.Warning);
+
                     throw;
                 }
             }
@@ -220,15 +246,21 @@ namespace Dsw2026Tpi.Application.Services
         {
             await GetActiveDoctorOrThrow(doctorId);
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var now = ArgentinaTime.Now;
+            var today = DateOnly.FromDateTime(now);
+            var currentTime = TimeOnly.FromDateTime(now);
 
             return (await _persistence.Paginate<AvailabilitySlot, DateOnly>(
                 pageSize,
                 pageIndex,
                 s => s.AvailabilityRule!.DoctorId == doctorId &&
                      s.Status == SlotStatus.AVAILABLE &&
-                     s.SlotDate >= today &&
-                     !s.Deleted &&
+                    !s.Deleted &&
+                    !s.AvailabilityRule!.Deleted &&
+                     (
+                         s.SlotDate > today ||
+                         (s.SlotDate == today && s.StartTime > currentTime)
+                     ) &&
                      (date == null || s.SlotDate == date),
                 s => s.SlotDate,
                 nameof(AvailabilitySlot.AvailabilityRule)))

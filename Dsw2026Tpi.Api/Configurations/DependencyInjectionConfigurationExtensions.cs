@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Api.Services;
+﻿
+using Dsw2026Tpi.Api.Services;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.Application.Services;
 using Dsw2026Tpi.CrossCutting.Logging;
@@ -10,18 +11,25 @@ namespace Dsw2026Tpi.Api.Configurations;
 
 public static class DependencyInjectionConfigurationExtensions
 {
-    public static IServiceCollection AddAppDependencies(this IServiceCollection services)
+    public static IServiceCollection AddAppDependencies(
+        this IServiceCollection services)
     {
         services.AddScoped<IPersistence, PersistenceEf>();
+
         services.AddScoped<IDoctorService, DoctorService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ISpecialityService, SpecialityService>();
         services.AddScoped<ISignInService, SignInService>();
         services.AddScoped<IAvailabilityService, AvailabilityService>();
+
+        services.AddScoped<ITokenRevocationService, TokenRevocationService>();
+
         services.AddSingleton<JwtService>();
         services.AddSingleton<IFeriadoService, FeriadoService>();
+
         services.AddScoped<ILogService, LogService>();
+
         return services;
     }
 }
