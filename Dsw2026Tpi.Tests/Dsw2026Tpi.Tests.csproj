@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,6 +12,7 @@
     <PackageReference Include="NSubstitute" Version="6.0.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.15" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,7 +24,7 @@
     <ProjectReference Include="..\Dsw2026Tpi.Application\Dsw2026Tpi.Application.csproj" />
     <ProjectReference Include="..\Dsw2026Tpi.CrossCutting\Dsw2026Tpi.CrossCutting.csproj" />
     <ProjectReference Include="..\Dsw2026Tpi.Domain\Dsw2026Tpi.Domain.csproj" />
-	<ProjectReference Include="..\Dsw2026Tpi.Data\Dsw2026Tpi.Data.csproj" />
+    <ProjectReference Include="..\Dsw2026Tpi.Data\Dsw2026Tpi.Data.csproj" />
   </ItemGroup>
 
 </Project>

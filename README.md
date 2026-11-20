@@ -5,44 +5,57 @@
 ### Integrantes
 
 | Nombre | Legajo |
-|---------|---------|
-| Baena, Paula Melina | 60596 | 
-| Chirino, Carlos Iván | 60388 |  
-|Robles, Sisa Verónica | 60535 | 
+|---|---|
+| Baena, Paula Melina | 60596 |
+| Chirino, Carlos Iván | 60388 |
+| Robles, Sisa Verónica | 60535 |
 | Vicente, Juana | 60599 |
----
 
 ## Descripción
 
-Este proyecto corresponde al Trabajo Práctico Integrador de la materia Desarrollo de Software.
-
-Se desarrolló una API REST para la gestión de turnos médicos, permitiendo administrar médicos, especialidades, disponibilidades y reservas de turnos mediante autenticación basada en JWT.
-
----
+Trabajo Práctico Integrador de Desarrollo de Software 2026. Se desarrolla una API REST para la gestión de turnos médicos, con administración de especialidades, médicos, disponibilidades y reservas, y autenticación mediante JWT.
 
 ## Tecnologías utilizadas
 
-- C#
-- ASP.NET Core
-- .NET 10
-- Entity Framework Core
-- SQLite
-- ASP.NET Core Identity
-- JWT
+- C# y .NET 10
+- ASP.NET Core Web API
+- Entity Framework Core y SQLite
+- ASP.NET Core Identity y JWT
 - Swagger / OpenAPI
-- xUnit
-- NSubstitute
+- xUnit y NSubstitute
 
----
-## Configuración del entorno
+## Funcionalidades principales
 
-La aplicación utiliza ASP.NET Core y Entity Framework Core con SQLite para la persistencia de datos.
+- **Autenticación:** acceso de administradores y pacientes mediante los mecanismos definidos por la API.
+- **Especialidades:** alta, consulta, actualización y baja lógica.
+- **Médicos:** alta, consulta, actualización y baja lógica, con asociación a especialidades.
+- **Disponibilidades:** definición y actualización de horarios por médico; generación de espacios de atención de 30 minutos y validación de reglas de negocio.
+- **Turnos:** reserva, consulta, búsqueda y cancelación, con controles de consistencia.
 
-La configuración general se encuentra en `Dsw2026Tpi.Api/appsettings.json`, mientras que la configuración específica del entorno de desarrollo puede definirse en `Dsw2026Tpi.Api/appsettings.Development.json`.
+## Configuración local del backend
 
-### Configuración de SQLite
+### Requisitos previos
 
-La cadena de conexión utilizada para desarrollo tiene el siguiente formato:
+- .NET SDK 10
+- Git
+- Acceso al repositorio
+- Opcional: herramienta `dotnet-ef` para inspeccionar migraciones
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/sisarobles/dsw2026-tpi.git
+cd dsw2026-tpi
+git switch development
+```
+
+La rama `development` contiene la versión integrada del equipo. Si el trabajo ya fue incorporado a `main`, puede utilizarse esa rama según las indicaciones de entrega.
+
+### 2. Configurar SQLite
+
+La aplicación utiliza Entity Framework Core con SQLite. La configuración general se encuentra en `Dsw2026Tpi.Api/appsettings.json`; los valores locales pueden definirse en la configuración de desarrollo o mediante User Secrets.
+
+Ejemplo de cadena de conexión:
 
 ```json
 {
@@ -52,362 +65,179 @@ La cadena de conexión utilizada para desarrollo tiene el siguiente formato:
 }
 ```
 
-La aplicación utiliza SQLite como motor de base de datos.
+El sistema utiliza dos contextos:
 
-Durante el inicio se ejecuta `SeedDatabaseAsync()`, que realiza las tareas de inicialización definidas por el proyecto.
+- `Dsw2026TpiDbContext`: entidades del sistema de turnos médicos.
+- `AuthenticationDbContext`: usuarios, roles y autenticación.
 
-### Configuración de JWT
+Ambos contextos utilizan la cadena `DefaultConnection`. La base de datos SQLite es local y no debe versionarse en el repositorio.
 
-La API utiliza autenticación basada en tokens JWT para controlar el acceso a los recursos protegidos.
+### 3. Configurar JWT y cuenta administrativa
 
-La configuración debe proporcionar los siguientes valores:
+La API utiliza tokens JWT para acceder a recursos protegidos. La configuración contempla valores como los siguientes:
 
 ```json
 {
   "Jwt": {
-    "Key": "<clave-segura>",
+    "Key": "<CLAVE_JWT_SEGURA>",
     "Issuer": "Dsw2026Tpi.Api",
     "Audience": "Dsw2026Tpi.ApiUsers",
     "ExpiresInMinutes": 60
-  }
-}
-```
-
-La propiedad `Key` debe contener una clave secreta segura, utilizada para firmar los tokens.
-
-Por seguridad, se recomienda configurar las credenciales mediante **User Secrets** o variables de entorno, evitando publicar claves reales y contraseñas en el repositorio.
-
-Para establecer la clave mediante User Secrets, desde el directorio del proyecto API se puede ejecutar:
-
-```bash
-dotnet user-secrets set "Jwt:Key" "<clave-segura>"
-```
-
-Para utilizar User Secrets, el proyecto debe tener configurado un `UserSecretsId` y ejecutarse en el entorno `Development`.
-
-### Inicialización de roles y administrador
-
-Durante el inicio de la aplicación se ejecuta el método `SeedDatabaseAsync()`, encargado de inicializar los roles y la cuenta administrativa del sistema.
-
-El proceso realiza las siguientes operaciones:
-
-- Verifica la existencia de los roles `Administrator` y `Patient`, y los crea cuando es necesario.
-- Comprueba si existe un administrador con el correo configurado.
-- Si no existe, intenta crear la cuenta administrativa y asignarle el rol `Administrator`.
-
-Los datos de la cuenta inicial se obtienen de la sección `AdminSeed`:
-
-```json
-{
+  },
   "AdminSeed": {
-    "Email": "<correo-administrador>",
-    "Password": "<contraseña-segura>"
+    "Email": "<EMAIL_ADMINISTRADOR>",
+    "Password": "<CONTRASEÑA_SEGURA>"
   }
 }
 ```
 
-Por seguridad, se recomienda configurar estas credenciales mediante User Secrets o variables de entorno y evitar incluir contraseñas reales en el repositorio.
-
-**Importante:** este proceso inicializa roles y usuarios, pero no aplica migraciones de Entity Framework Core. La base de datos y las tablas correspondientes deben encontrarse disponibles antes de ejecutar la inicialización.
-
-### Configuración mediante User Secrets
-
-Desde la carpeta `Dsw2026Tpi.Api`, se pueden configurar las credenciales ejecutando:
-
-```bash
-dotnet user-secrets set "AdminSeed:Email" "<correo-administrador>"
-dotnet user-secrets set "AdminSeed:Password" "<contraseña-segura>"
-```
-
-Estos comandos requieren que el proyecto tenga configurado un `UserSecretsId` y que se utilice el entorno de desarrollo.
-
----
-## Persistencia de datos
-
-El proyecto utiliza **Entity Framework Core con SQLite** para almacenar la información.
-
-Se configuran dos contextos de base de datos:
-
-- `Dsw2026TpiDbContext`: gestiona la persistencia de las entidades del sistema de turnos médicos.
-- `AuthenticationDbContext`: gestiona los usuarios, roles y demás información de autenticación.
-
-Ambos contextos utilizan la cadena de conexión `DefaultConnection`, definida en la configuración de la aplicación.
-
-### Inicialización de datos
-
-El sistema dispone de mecanismos para inicializar roles y una cuenta administrativa.
-
-Durante el inicio de la aplicación, `SeedDatabaseAsync()` verifica la existencia de los roles `Administrator` y `Patient`, y crea una cuenta administrativa inicial si no existe.
-
-Adicionalmente, el contexto de autenticación tiene configurado un mecanismo de inicialización de roles a partir del archivo `Sources/roles.json`.
-
-### Migraciones
-
-La aplicación utiliza migraciones de Entity Framework Core para administrar la estructura de la base de datos.
-
-Antes de ejecutar el proyecto por primera vez, debe verificarse que las migraciones correspondientes a ambos contextos se hayan aplicado.
-
-La configuración de persistencia revisada no ejecuta migraciones automáticamente durante el inicio de la aplicación.
-
----
-# Endpoints
-
-## Autenticación
-
-### POST /api/auth/admin/login
-
-Autentica un administrador mediante correo electrónico y contraseña. Devuelve un token JWT para acceder a los recursos protegidos.
-
-### POST /api/auth/patient/login
-
-Autentica a un paciente utilizando correo electrónico y DNI. Si es el primer acceso, el paciente se registra automáticamente y se genera un token JWT.
-
----
-
-## Especialidades
-
-### GET /api/specialties
-
-Obtiene el listado de especialidades activas. Disponible para Administradores.
-
-Permite paginación y búsqueda por nombre.
-
-### GET /api/specialties/{id}
-
-Obtiene la información de una especialidad médica activa a partir de su identificador.
-
-Solo disponible para administradores.
-
-### POST /api/specialties
-
-Registra una nueva especialidad médica.
-
-Solo disponible para Administradores.
-
-### PUT /api/specialties/{id}
-
-Actualiza una especialidad existente.
-
-Solo disponible para Administradores.
-
-### DELETE /api/specialties/{id}
-
-Realiza el borrado lógico de una especialidad.
-
-Solo disponible para Administradores.
-
----
-
-## Médicos
-
-### GET /api/doctors
-
-Obtiene el listado de médicos activos.
-
-Permite paginación y búsqueda por nombre.
-
-### GET /api/doctors/{id}
-
-Obtiene la información de un médico activo a partir de su identificador, incluyendo los datos de su especialidad cuando tiene una asignada.
-
-Solo disponible para administradores.
-
-### GET /api/doctors/{id}/availabilities
-
-Obtiene la disponibilidad del médico para el mes actual.
-
-### POST /api/doctors
-
-Registra un nuevo médico.
-
-Solo disponible para Administradores.
-
-### PUT /api/doctors/{id}
-
-Actualiza un médico existente.
-
-Solo disponible para Administradores.
-
-### DELETE /api/doctors/{id}
-
-Realiza el borrado lógico de un médico.
-
-Solo disponible para Administradores.
-
----
-
-## Disponibilidades
-
-### POST /api/availabilities
-
-Genera automáticamente los turnos disponibles del médico para el mes en curso.
-
-Solo disponible para Administradores.
-
-### PUT /api/availabilities
-
-Actualiza la disponibilidad mensual del médico manteniendo las reservas existentes.
-
-Solo disponible para Administradores.
-
----
-
-## Turnos
-
-### POST /api/appointments
-
-Permite a un paciente reservar un turno.
-
-### GET /api/appointments/patient
-
-Obtiene los turnos reservados por el paciente.
-
-### DELETE /api/appointments/{id}
-
-Cancela un turno reservado.
-
-### GET /api/appointments
-
-Lista los turnos de una fecha determinada.
-
-Solo disponible para Administradores.
-
-### GET /api/appointments/search
-
-Permite realizar búsquedas avanzadas de turnos mediante distintos filtros.
-
-Solo disponible para Administradores.
-
----
-
-## Documentación
-
-Al ejecutar la aplicación en modo desarrollo, la documentación de la API estará disponible mediante Swagger.
-
----
-## Pruebas unitarias
-
-El proyecto incluye pruebas unitarias desarrolladas con **xUnit** y **NSubstitute**, organizadas en el proyecto `Dsw2026Tpi.Tests`.
-
-Las pruebas permiten verificar reglas de negocio del dominio y el comportamiento de los servicios sin depender de una base de datos real.
-
-### Pruebas implementadas
-
-- **AppointmentServiceDeleteTests:** cancelación de turnos y liberación de horarios reservados.
-- **AvailabilityServiceUpdateTests:** actualización de disponibilidades y validación de horarios reservados.
-- **DoctorServiceGetByIdTests:** consulta de médicos activos, inexistentes e inactivos.
-- **SpecialityServiceGetByIdTests:** consulta de especialidades activas, inexistentes e inactivas.
-- **AppointmentTests:** creación de citas, cancelación y prevención de cancelaciones duplicadas.
-
-### Ejecución de las pruebas
-
-Desde Visual Studio:
-
-1. Abrir la solución del proyecto.
-2. Seleccionar **Prueba → Explorador de pruebas**.
-3. Ejecutar todas las pruebas.
-
-También pueden ejecutarse desde una terminal ubicada en la raíz del repositorio:
-
-```bash
-dotnet test
-```
-
-Actualmente se cuenta con **13 pruebas unitarias aprobadas**.
-
----
-
-## Estado del proyecto
-
----
-
-## Configuración local del backend
-
-### Requisitos previos
-
-- .NET SDK 10.
-- Git.
-- Acceso al repositorio del proyecto.
-
-### 1. Obtener el proyecto
-
-Clonar el repositorio y entrar en la carpeta raíz:
-
-```bash
-git clone https://github.com/sisarobles/dsw2026-tpi.git
-cd dsw2026-tpi
-```
-
-Cambiar a la rama de trabajo que corresponda si se necesita probar cambios todavía no integrados.
-
-### 2. Configurar secretos locales
-
-Los archivos `appsettings.Development.json` y `appsettings.Local.json` no se versionan porque pueden contener información sensible.
-
-Desde la raíz del repositorio, inicializar User Secrets para el proyecto de API:
+**No subir claves ni contraseñas reales a GitHub.** Para desarrollo, utilizar User Secrets o variables de entorno. Desde la raíz del repositorio:
 
 ```bash
 dotnet user-secrets init --project Dsw2026Tpi.Api
+dotnet user-secrets set "Jwt:Key" "<CLAVE_JWT_SEGURA>" --project Dsw2026Tpi.Api
+dotnet user-secrets set "AdminSeed:Email" "<EMAIL_ADMINISTRADOR>" --project Dsw2026Tpi.Api
+dotnet user-secrets set "AdminSeed:Password" "<CONTRASEÑA_SEGURA>" --project Dsw2026Tpi.Api
 ```
 
-Configurar los valores que la aplicación necesita para el entorno local, según las claves utilizadas por el proyecto. Por ejemplo:
+Si el proyecto ya tiene configurado un `UserSecretsId`, no es necesario repetir `dotnet user-secrets init`.
 
-```bash
-dotnet user-secrets set "Jwt:Key" "<CLAVE_JWT_LOCAL>" --project Dsw2026Tpi.Api
-dotnet user-secrets set "AdminSeed:Email" "<EMAIL_ADMIN_LOCAL>" --project Dsw2026Tpi.Api
-dotnet user-secrets set "AdminSeed:Password" "<CONTRASEÑA_ADMIN_LOCAL>" --project Dsw2026Tpi.Api
-```
-
-Reemplazar los valores de ejemplo por valores locales. No subir contraseñas ni claves reales al repositorio.
-
-Si la aplicación requiere otros parámetros locales, configurarlos usando las claves definidas en el código.
-
-### 3. Restaurar dependencias y compilar
-
-Desde la raíz del repositorio:
+### 4. Restaurar y compilar
 
 ```bash
 dotnet restore
 dotnet build
 ```
 
-### 4. Crear y actualizar las bases de datos
+### 5. Inicializar la base de datos
 
-En el entorno `Development`, la API ejecuta las migraciones de Entity Framework Core al iniciar, antes de cargar los datos iniciales.
+En el entorno `Development`, la API está configurada para aplicar las migraciones de Entity Framework Core durante el inicio, antes de inicializar los datos necesarios. El método `SeedDatabaseAsync()` se utiliza para inicializar roles y la cuenta administrativa, según la configuración vigente.
 
-Se utilizan dos contextos:
+Los roles utilizados son `Administrator` y `Patient`. El administrador inicial se configura mediante `AdminSeed`.
 
-- `Dsw2026TpiDbContext`: persistencia principal de la aplicación.
-- `AuthenticationDbContext`: persistencia de autenticación e identidad.
-
-Las bases SQLite son locales y no deben agregarse al repositorio. Para comprobar las migraciones del contexto principal:
+Para inspeccionar las migraciones de cada contexto, si se dispone de `dotnet-ef`:
 
 ```bash
 dotnet ef migrations list --project Dsw2026Tpi.Data --startup-project Dsw2026Tpi.Api --context Dsw2026TpiDbContext
-```
-
-Para el contexto de autenticación:
-
-```bash
 dotnet ef migrations list --project Dsw2026Tpi.Data --startup-project Dsw2026Tpi.Api --context AuthenticationDbContext
 ```
 
-Antes de iniciar la aplicación, verificar que las migraciones estén sincronizadas con los modelos.
+Si se modifican entidades o configuraciones de persistencia, se deben revisar y generar las migraciones correspondientes antes de integrar los cambios.
 
-### 5. Ejecutar la API
+### 6. Ejecutar la API
 
 ```bash
 dotnet run --project Dsw2026Tpi.Api
 ```
 
-En desarrollo, Swagger permite consultar y probar los endpoints de la API.
+En el entorno de desarrollo, consultar la documentación Swagger/OpenAPI en la dirección que indique la aplicación.
 
-### 6. Consideraciones para el equipo
+## Endpoints principales
+
+Los siguientes endpoints resumen las operaciones documentadas. Las restricciones de autorización y los parámetros concretos deben consultarse en Swagger/OpenAPI.
+
+### Autenticación
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/auth/admin/login` | Autentica al administrador mediante correo y contraseña; devuelve JWT. |
+| POST | `/api/auth/patient/login` | Autentica al paciente mediante correo y DNI; contempla registro en el primer acceso. |
+
+### Especialidades
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/specialties` | Lista especialidades activas; permite búsqueda y paginación. |
+| GET | `/api/specialties/{id}` | Consulta una especialidad activa. |
+| POST | `/api/specialties` | Registra una especialidad. |
+| PUT | `/api/specialties/{id}` | Actualiza una especialidad. |
+| DELETE | `/api/specialties/{id}` | Realiza baja lógica. |
+
+Las operaciones de especialidades están destinadas a administradores según la documentación existente del proyecto.
+
+### Médicos
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/doctors` | Lista médicos activos; permite búsqueda y paginación. |
+| GET | `/api/doctors/{id}` | Consulta un médico activo. |
+| GET | `/api/doctors/{id}/availabilities` | Consulta la disponibilidad del médico para el mes actual. |
+| POST | `/api/doctors` | Registra un médico. |
+| PUT | `/api/doctors/{id}` | Actualiza un médico. |
+| DELETE | `/api/doctors/{id}` | Realiza baja lógica. |
+
+Las operaciones de administración de médicos requieren los permisos correspondientes.
+
+### Disponibilidades
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/availabilities` | Crea reglas de disponibilidad y genera slots para el mes en curso. |
+| PUT | `/api/availabilities` | Actualiza la disponibilidad, respetando las restricciones sobre reservas existentes. |
+
+Estas operaciones están destinadas a administradores.
+
+### Turnos
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/appointments` | Reserva un turno. |
+| GET | `/api/appointments/patient` | Consulta los turnos del paciente autenticado. |
+| DELETE | `/api/appointments/{id}` | Cancela un turno. |
+| GET | `/api/appointments` | Lista turnos de una fecha; operación administrativa. |
+| GET | `/api/appointments/search` | Busca turnos mediante filtros; operación administrativa. |
+
+## Pruebas automatizadas
+
+El proyecto incluye pruebas con **xUnit** y **NSubstitute**, ubicadas en `Dsw2026Tpi.Tests`. Verifican reglas de negocio y comportamientos de servicios, utilizando dobles de prueba para aislar dependencias cuando corresponde.
+
+### Cobertura funcional de las pruebas
+
+- **Disponibilidades — creación:** médico inexistente o inactivo, horarios superpuestos, rango horario inválido, generación de slots de 30 minutos, feriados y prevención de slots que excedan el horario configurado.
+- **Disponibilidades — actualización:** validaciones asociadas a cambios de horarios y reservas existentes.
+- **Turnos — creación, cancelación y persistencia:** comportamientos de los servicios y consistencia de reservas.
+- **Dominio de turnos:** creación, cancelación y reglas para evitar cancelaciones duplicadas.
+- **Médicos y especialidades:** consultas de entidades activas, inexistentes o inactivas.
+- **API:** pruebas del manejo de excepciones mediante middleware.
+
+Entre los archivos de pruebas se encuentran `AvailabilityServiceCreateTests.cs`, `AvailabilityServiceUpdateTests.cs`, `AppointmentServiceCreateTests.cs`, `AppointmentServiceDeleteTests.cs`, `AppointmentPersistenceTests.cs`, `AppointmentTests.cs`, `DoctorServiceGetByIdTests.cs`, `SpecialityServiceGetByIdTests.cs` y `ExceptionHandlingMiddlewareTests.cs`.
+
+### Cómo ejecutar las pruebas
+
+Desde la raíz del repositorio:
+
+```bash
+dotnet test Dsw2026Tpi.Tests
+```
+
+También pueden ejecutarse desde el Explorador de pruebas de Visual Studio.
+
+**Última ejecución local verificada:** 36 pruebas correctas, 0 fallidas y 0 omitidas. Compilación exitosa con 5 advertencias de nulabilidad (CS8618, CS8602 y CS8620). Estas advertencias no impidieron la ejecución, pero quedan identificadas para revisión técnica.
+
+El conjunto de pruebas incluye una regresión para comprobar que los slots de 30 minutos no sobrepasen el final del rango horario de disponibilidad.
+
+## Estado del proyecto
+
+A la fecha de la última validación local:
+
+- Backend ASP.NET Core integrado en `development`.
+- Persistencia con Entity Framework Core y SQLite.
+- Autenticación mediante ASP.NET Core Identity y JWT.
+- Funcionalidades de médicos, especialidades, disponibilidades y turnos implementadas.
+- Cambios de refactorización de disponibilidades y consistencia de turnos integrados por el equipo.
+- **36 pruebas automatizadas aprobadas**.
+- **5 advertencias de nulabilidad pendientes de revisión**.
+
+La ejecución satisfactoria de pruebas automatizadas no sustituye las verificaciones manuales de endpoints, autenticación y despliegue en un entorno limpio.
+
+## Consideraciones para el equipo
 
 - Cada integrante debe configurar sus propios secretos locales.
-- No compartir ni versionar archivos con contraseñas o claves JWT.
-- No versionar archivos de bases de datos SQLite (`*.db`).
-- Si se modifican entidades o configuraciones de persistencia, coordinar y generar las migraciones correspondientes antes de integrar los cambios.
-- Para probar una instalación limpia, utilizar una base local nueva y comprobar que las migraciones y la carga inicial se ejecuten correctamente.
+- No versionar claves JWT, contraseñas ni archivos de bases de datos SQLite (`*.db`).
+- Trabajar en ramas de funcionalidad o documentación y crear Pull Requests hacia `development`.
+- Coordinar los cambios de entidades y migraciones antes de integrarlos.
+- Para comprobar una instalación limpia, usar una base local nueva y verificar la aplicación de migraciones y la inicialización de roles y administrador.
 
-Backend correspondiente al Trabajo Práctico Integrador de Desarrollo de Software 2026.
+---
+
+**Trabajo Práctico Integrador — Desarrollo de Software 2026**

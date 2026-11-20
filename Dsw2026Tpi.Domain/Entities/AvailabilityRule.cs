@@ -1,4 +1,5 @@
-﻿namespace Dsw2026Tpi.Domain.Entities
+﻿
+namespace Dsw2026Tpi.Domain.Entities
 {
     public class AvailabilityRule : EntityBase
     {
@@ -12,10 +13,20 @@
         public bool Deleted { get; private set; }
         public ICollection<AvailabilitySlot> Slots { get; private set; } = new List<AvailabilitySlot>();
 
-        //Constructor para EF 
-        private AvailabilityRule() { }
+        // Constructor para EF
+        private AvailabilityRule()
+        {
+            Slots = new List<AvailabilitySlot>();
+        }
 
-       public AvailabilityRule(Guid doctorId, int month, int year, DayOfWeek dayOfWeek, TimeOnly startTime, TimeOnly endTime,  Guid? id = null) : base(id)
+        public AvailabilityRule(
+            Guid doctorId,
+            int month,
+            int year,
+            DayOfWeek dayOfWeek,
+            TimeOnly startTime,
+            TimeOnly endTime,
+            Guid? id = null) : base(id)
         {
             DoctorId = doctorId;
             Month = month;
@@ -25,6 +36,30 @@
             EndTime = endTime;
             Deleted = false;
             Slots = new List<AvailabilitySlot>();
+        }
+
+        public void GenerateSlots(IEnumerable<DateOnly> dates)
+        {
+            foreach (var date in dates)
+            {
+                if (date.DayOfWeek != DayOfWeek)
+                    continue;
+
+                var current = StartTime;
+
+                while (current.AddMinutes(30) <= EndTime)
+                {
+                    var slotEnd = current.AddMinutes(30);
+
+                    Slots.Add(new AvailabilitySlot(
+                        Id,
+                        date,
+                        current,
+                        slotEnd));
+
+                    current = slotEnd;
+                }
+            }
         }
     }
 }

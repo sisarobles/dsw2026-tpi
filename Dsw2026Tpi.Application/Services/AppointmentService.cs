@@ -1,4 +1,5 @@
-﻿using Dsw2026Tpi.Application.Dtos;
+﻿
+using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Extensions;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
@@ -60,7 +61,7 @@ namespace Dsw2026Tpi.Application.Services
                         ErrorCodes.APPOINTMENT_CONFLICT,
                         nameof(ErrorCodes.APPOINTMENT_CONFLICT));
                 }
-
+                slot.Book();
                 appointment = new Appointment(patientId, slot.Id, request.Reason);
                 await _persistence.Add(appointment);
 
@@ -125,11 +126,10 @@ namespace Dsw2026Tpi.Application.Services
 
             try
             {
-                appointment.Cancel();
-                appointment.AvailabilitySlot!.Release();
+                appointment.Cancel(appointment.AvailabilitySlot!);
 
                 await _persistence.Update<Appointment>(appointment);
-                await _persistence.Update<AvailabilitySlot>(appointment.AvailabilitySlot);
+                await _persistence.Update<AvailabilitySlot>(appointment.AvailabilitySlot!);
 
                 await _persistence.CommitTransactionAsync();
             }

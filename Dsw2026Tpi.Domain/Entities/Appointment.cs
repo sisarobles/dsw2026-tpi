@@ -1,15 +1,17 @@
-﻿using Dsw2026Tpi.CrossCutting.Exceptions;
+﻿
+using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 
 namespace Dsw2026Tpi.Domain.Entities
 {
-    public enum Estado 
+    public enum Estado
     {
         BOOKED = 1,
         CANCELLED,
         ATTENDED,
         NO_SHOW
     }
+
     public class Appointment : EntityBase
     {
         public Estado Estado { get; private set; }
@@ -19,10 +21,14 @@ namespace Dsw2026Tpi.Domain.Entities
         public Guid AvailabilitySlotId { get; private set; }
         public AvailabilitySlot? AvailabilitySlot { get; private set; }
 
-        //constructor para EF
+        // Constructor para EF
         private Appointment() { }
 
-        public Appointment(Guid pacienteId, Guid availabilitySlotId, string reason, Guid? id = null) : base(id)
+        public Appointment(
+            Guid pacienteId,
+            Guid availabilitySlotId,
+            string reason,
+            Guid? id = null) : base(id)
         {
             Estado = Estado.BOOKED;
             PatientId = pacienteId;
@@ -30,10 +36,24 @@ namespace Dsw2026Tpi.Domain.Entities
             Reason = reason;
         }
 
-        public void Cancel()
+        public void Cancel(AvailabilitySlot slot)
         {
+            ArgumentNullException.ThrowIfNull(slot);
+
             if (Estado != Estado.BOOKED)
-                throw new BusinessRuleException(ErrorCodes.CANCEL_APPOINTMENT, nameof(ErrorCodes.CANCEL_APPOINTMENT));
+            {
+                throw new BusinessRuleException(
+                    ErrorCodes.CANCEL_APPOINTMENT,
+                    nameof(ErrorCodes.CANCEL_APPOINTMENT));
+            }
+
+            if (slot.Id != AvailabilitySlotId)
+            {
+                throw new InvalidOperationException(
+                    "El turno indicado no corresponde a esta cita.");
+            }
+
+            slot.Release();
             Estado = Estado.CANCELLED;
         }
     }
