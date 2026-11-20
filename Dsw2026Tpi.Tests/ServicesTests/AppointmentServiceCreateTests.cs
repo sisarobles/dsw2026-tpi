@@ -70,7 +70,9 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             _persistence
                 .Add(Arg.Any<Appointment>())
-                .Returns(call => call.Arg<Appointment>());
+                .Returns<Appointment>(
+                    call => call.Arg<Appointment>()
+                        ?? throw new InvalidOperationException("No se recibió una cita."));
 
             // Act
             await _service.CreateAppointment("test-user", request);

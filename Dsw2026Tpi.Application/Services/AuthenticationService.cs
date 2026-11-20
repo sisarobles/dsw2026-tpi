@@ -47,13 +47,13 @@ public class AuthenticationService : IAuthenticationService
 
         if (!result)
         { 
-            await _logService.RegistrarAsync("Auth", "LOGIN_ADMIN_FAILED", $"Intento de login fallido para {request.Email}", LogNivel.Warning);
+            await _logService.LogAsync("Auth", "LOGIN_ADMIN_FAILED", $"Intento de login fallido para {request.Email}", LogLevel.Warning);
             throw new AuthenticationException();
         }
 
         var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
 
-        var token = _jwtService.GenerateToken(user.Id, user.UserName!, role); await _logService.RegistrarAsync("Auth", "LOGIN_ADMIN_SUCCESS", $"Login exitoso para {request.Email}");
+        var token = _jwtService.GenerateToken(user.Id, user.UserName!, role); await _logService.LogAsync("Auth", "LOGIN_ADMIN_SUCCESS", $"Login exitoso para {request.Email}");
 
         return new LoginAdminModel.Response(
             token,
@@ -85,7 +85,7 @@ public class AuthenticationService : IAuthenticationService
             var newPatient = new Patient(user.Id, request.Dni);
             await _persistence.Add(newPatient);
 
-            await _logService.RegistrarAsync("Auth", "PATIENT_AUTO_REGISTERED", $"Paciente auto-registrado: {request.Email}");
+            await _logService.LogAsync("Auth", "PATIENT_AUTO_REGISTERED", $"Paciente auto-registrado: {request.Email}");
         }
         else
         {
@@ -94,14 +94,14 @@ public class AuthenticationService : IAuthenticationService
 
             if (existingPatient.Dni != request.Dni)
             {
-                await _logService.RegistrarAsync("Auth", "LOGIN_PATIENT_FAILED", $"DNI no coincide para {request.Email}", LogNivel.Warning);
+                await _logService.LogAsync("Auth", "LOGIN_PATIENT_FAILED", $"DNI no coincide para {request.Email}", LogLevel.Warning);
                 throw new AuthenticationException();
             }
         }
 
         var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
         var token = _jwtService.GenerateToken(user.Id, user.UserName!, role);
-        await _logService.RegistrarAsync("Auth", "LOGIN_PATIENT_SUCCESS", $"Login exitoso para {request.Email}");
+        await _logService.LogAsync("Auth", "LOGIN_PATIENT_SUCCESS", $"Login exitoso para {request.Email}");
         return new LoginPatientModel.Response(token, role);
     }
 

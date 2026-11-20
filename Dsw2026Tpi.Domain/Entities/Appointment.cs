@@ -13,7 +13,7 @@ namespace Dsw2026Tpi.Domain.Entities
     public class Appointment : EntityBase
     {
         public Estado Estado { get; private set; }
-        public string Reason { get; private set; }
+        public string Reason { get; private set; } = string.Empty;
         public Guid PatientId { get; private set; }
         public Patient? Patient { get; private set; }
         public Guid AvailabilitySlotId { get; private set; }

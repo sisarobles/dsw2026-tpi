@@ -70,11 +70,11 @@ namespace Dsw2026Tpi.Application.Services
             {
                 await _persistence.RollbackTransactionAsync();
 
-                await _logger.RegistrarAsync(
-                    modulo: "Appointments",
-                    accion: "CreateAppointment",
-                    detalle: $"Conflicto al reservar el slot {slot.Id}",
-                    nivel: LogNivel.Warning);
+                await _logger.LogAsync(
+                    module: "Appointments",
+                    action: "CreateAppointment",
+                    detail: $"Conflicto al reservar el slot {slot.Id}",
+                    level: LogLevel.Warning);
 
                 throw;
             }
@@ -82,11 +82,11 @@ namespace Dsw2026Tpi.Application.Services
             {
                 await _persistence.RollbackTransactionAsync();
 
-                await _logger.RegistrarAsync(
-                    modulo: "Appointments",
-                    accion: "CreateAppointment",
-                    detalle: $"Conflicto de concurrencia al reservar el slot {slot.Id}",
-                    nivel: LogNivel.Warning);
+                await _logger.LogAsync(
+                    module: "Appointments",
+                    action: "CreateAppointment",
+                    detail: $"Conflicto de concurrencia al reservar el slot {slot.Id}",
+                    level: LogLevel.Warning);
 
                 throw new ConflictException(
                     ErrorCodes.APPOINTMENT_CONFLICT,
@@ -98,10 +98,10 @@ namespace Dsw2026Tpi.Application.Services
                 throw;
             }
 
-            await _logger.RegistrarAsync(
-                modulo: "Appointments",
-                accion: "CreateAppointment",
-                detalle: $"Cita {appointment.Id} registrada para el paciente {patientId}, slot {slot.Id}");
+            await _logger.LogAsync(
+                module: "Appointments",
+                action: "CreateAppointment",
+                detail: $"Cita {appointment.Id} registrada para el paciente {patientId}, slot {slot.Id}");
 
             return appointment.ToResponse(patient, slot);
         }
@@ -139,10 +139,10 @@ namespace Dsw2026Tpi.Application.Services
                 throw;
             }
 
-            await _logger.RegistrarAsync(
-                modulo: "Appointments",
-                accion: "DeleteAppointment",
-                detalle: $"Cita {appointment.Id} del paciente {appointment.PatientId} cancelada");
+            await _logger.LogAsync(
+                module: "Appointments",
+                action: "DeleteAppointment",
+                detail: $"Cita {appointment.Id} del paciente {appointment.PatientId} cancelada");
         }
 
 
@@ -168,10 +168,10 @@ namespace Dsw2026Tpi.Application.Services
                 AppointmentQueryExtensions.SearchIncludes
             );
 
-            await _logger.RegistrarAsync(
-                modulo: "Appointments",
-                accion: "GetAppointmentBySearch",
-                detalle: $"Búsqueda de citas realizada. Filtros: SpecialtyId={request.SpecialtyId}, DoctorId={request.DoctorId}, PatientDni={request.PatientDni}, Date={request.Date}. Página {pageIndex}, tamaño {pageSize}"
+            await _logger.LogAsync(
+                module: "Appointments",
+                action: "GetAppointmentBySearch",
+                detail: $"Búsqueda de citas realizada. Filtros: SpecialtyId={request.SpecialtyId}, DoctorId={request.DoctorId}, PatientDni={request.PatientDni}, Date={request.Date}. Página {pageIndex}, tamaño {pageSize}"
             );
 
             return appointments.Map(a => a.ToSearchResponse());
