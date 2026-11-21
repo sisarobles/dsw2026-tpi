@@ -107,7 +107,7 @@ public class AuthenticationServiceTests
         var response = await service.LoginAdmin(request);
 
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
-        Assert.Equal(Roles.Administrator, response.Role);
+        Assert.Equal(Roles.Administrator.ToUpperInvariant(), response.Role);
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public class AuthenticationServiceTests
         var response = await service.LoginPatient(request);
 
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
-        Assert.Equal(Roles.Patient, response.Role);
+        Assert.Equal(Roles.Patient.ToUpperInvariant(), response.Role);
 
         await _signInService.Received(1)
             .CheckPassword(user, "12345678");
@@ -413,7 +413,7 @@ public class AuthenticationServiceTests
         var response = await service.LoginPatient(request);
 
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
-        Assert.Equal(Roles.Patient, response.Role);
+        Assert.Equal(Roles.Patient.ToUpperInvariant(), response.Role);
 
         await _userManager.Received(1)
             .AddPasswordAsync(user, "12345678");
@@ -490,7 +490,7 @@ public class AuthenticationServiceTests
         var response = await service.LoginPatient(request);
 
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
-        Assert.Equal(Roles.Patient, response.Role);
+        Assert.Equal(Roles.Patient.ToUpperInvariant(), response.Role);
 
         await _userManager.Received(1)
             .CreateAsync(

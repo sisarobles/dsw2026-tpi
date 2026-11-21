@@ -35,7 +35,6 @@ namespace Dsw2026Tpi.Application.Services
 
             slot.ValidateSlotForBooking(request.DoctorId);
 
-            // Verifica que el médico asociado siga activo.
             var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
 
             if (doctor == null || !doctor.IsActive)
@@ -141,8 +140,8 @@ namespace Dsw2026Tpi.Application.Services
                 if (!cancelled)
                 {
                     throw new ConflictException(
-                        ErrorCodes.APPOINTMENT_CONFLICT,
-                        nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+                        ErrorCodes.CANCEL_APPOINTMENT,
+                        nameof(ErrorCodes.CANCEL_APPOINTMENT));
                 }
 
                 await _persistence.CommitTransactionAsync();

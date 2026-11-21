@@ -97,7 +97,7 @@ public class AuthenticationService : IAuthenticationService
 
         return new LoginAdminModel.Response(
             token,
-            Roles.Administrator);
+            Roles.Administrator.ToUpperInvariant());
     }
 
     public async Task<LoginPatientModel.Response> LoginPatient(
@@ -209,7 +209,6 @@ public class AuthenticationService : IAuthenticationService
 
             if (string.IsNullOrEmpty(user.PasswordHash))
             {
-                // Las cuentas antiguas también deben respetar el bloqueo de Identity.
                 if (await _userManager.IsLockedOutAsync(user))
                 {
                     await _logService.LogAsync(
@@ -234,7 +233,6 @@ public class AuthenticationService : IAuthenticationService
                     throw new AuthenticationException();
                 }
 
-                // Migra la cuenta antigua: Identity almacena el hash del DNI.
                 var passwordResult = await _userManager.AddPasswordAsync(
                     user,
                     password);
@@ -285,7 +283,7 @@ public class AuthenticationService : IAuthenticationService
 
         return new LoginPatientModel.Response(
             token,
-            Roles.Patient);
+            Roles.Patient.ToUpperInvariant());
     }
 
     private static ApplicationUser CreateApplicationUser(string email)

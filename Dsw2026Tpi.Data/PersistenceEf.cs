@@ -18,7 +18,6 @@ public class PersistenceEf: IPersistence
         _context = context;
     }
 
-
     public async Task<T> Add<T>(T entity) where T : EntityBase
     {
         await _context.AddAsync(entity);
@@ -30,17 +29,30 @@ public class PersistenceEf: IPersistence
         }
         catch (DbUpdateException ex)
             when (entity is Appointment &&
-              ex.InnerException is SqliteException sqliteException &&
-              sqliteException.SqliteErrorCode == 19 &&
-              sqliteException.SqliteExtendedErrorCode == 2067 &&
-              sqliteException.Message.Contains(
-                "Appointments.AvailabilitySlotId",
-               StringComparison.OrdinalIgnoreCase))
-            {
-                throw new Dsw2026Tpi.CrossCutting.Exceptions.ConflictException(
-                    Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT,
-                    nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT));
-            }
+                ex.InnerException is SqliteException sqliteException &&
+                sqliteException.SqliteErrorCode == 19 &&
+                sqliteException.SqliteExtendedErrorCode == 2067 &&
+                sqliteException.Message.Contains(
+                    "Appointments.AvailabilitySlotId",
+                    StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ConflictException(
+                Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT,
+                nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT));
+        }
+        catch (DbUpdateException ex)
+            when (entity is Patient &&
+                ex.InnerException is SqliteException sqliteException &&
+                sqliteException.SqliteErrorCode == 19 &&
+                sqliteException.SqliteExtendedErrorCode == 2067 &&
+                sqliteException.Message.Contains(
+                    "Patients.Dni",
+                    StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ConflictException(
+                Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.REGISTER_USER_CONFLICT,
+                nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.REGISTER_USER_CONFLICT));
+        }
     }
 
     public async Task<T> Delete<T>(T entity) where T : EntityBase
