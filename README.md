@@ -114,6 +114,32 @@ La clave JWT debe tener al menos 32 bytes.
 
 Si el proyecto ya tiene configurado un `UserSecretsId`, no es necesario repetir `dotnet user-secrets init`.
 
+### Alternativa: configuración mediante variables de entorno
+
+Además de User Secrets, las credenciales del administrador inicial y la clave JWT pueden configurarse mediante variables de entorno.
+
+En **PowerShell (Windows)**:
+
+```powershell
+$env:AdminSeed__Email="admin@ejemplo.com"
+$env:AdminSeed__Password="TuClaveSegura"
+$env:Jwt__Key="UnaClaveDeFirmaSeguraDeAlMenos32Bytes"
+```
+
+En **Git Bash (Windows)** o Linux:
+
+```bash
+export AdminSeed__Email="admin@ejemplo.com"
+export AdminSeed__Password="TuClaveSegura"
+export Jwt__Key="UnaClaveDeFirmaSeguraDeAlMenos32Bytes"
+```
+
+En ASP.NET Core, el doble guion bajo (`__`) representa el separador de secciones (`:`) de la configuración. Por ejemplo, `AdminSeed__Email` corresponde a `AdminSeed:Email`.
+
+Estas variables se aplican a la sesión de terminal desde la que se ejecuta la API. Los valores mostrados son ejemplos: deben reemplazarse por credenciales seguras y no deben guardarse con valores reales en archivos versionados.
+
+La cuenta administrativa inicial se crea utilizando los valores configurados de `AdminSeed` durante el proceso de inicialización correspondiente.
+
 La cuenta administrativa inicial se crea a partir de los valores de `AdminSeed`. Los roles utilizados por el sistema son `Administrador` y `Paciente`.
 
 ### Autenticación de pacientes
