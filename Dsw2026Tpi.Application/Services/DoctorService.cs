@@ -16,23 +16,45 @@ public class DoctorService : IDoctorService
         _persistence = persistence;
     }
 
-    public async Task<Pagination<DoctorModel.Response>> GetAll(
-        int pageSize,
-        int pageIndex,
-        string? name = null,
-        Guid? specialtyId = null)
-    {
-        var doctors = await _persistence.Paginate<Doctor, string>(
-            pageSize,
-            pageIndex,
-            d => d.IsActive &&
-                (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)) &&
-                (!specialtyId.HasValue || d.SpecialityId == specialtyId.Value),
-            x => x.Name,
-            nameof(Doctor.Speciality));
+    
+public async Task<Pagination<DoctorModel.Response>> GetAll(
+    int pageSize,
+    int pageIndex,
+    string? name = null,
+    Guid? specialtyId = null)
+{
+    var normalizedName = name?
+        .ToLowerInvariant()
+        .Replace("á", "a")
+        .Replace("é", "e")
+        .Replace("í", "i")
+        .Replace("ó", "o")
+        .Replace("ú", "u")
+        .Replace("ü", "u");
 
-        return doctors.Map(d => d.ToResponse());
-    }
+    var doctors = await _persistence.Paginate<Doctor, string>(
+        pageSize,
+        pageIndex,
+        d => d.IsActive &&
+            (
+                string.IsNullOrWhiteSpace(normalizedName) ||
+                d.Name.ToLower()
+                    .Replace("á", "a")
+                    .Replace("é", "e")
+                    .Replace("í", "i")
+                    .Replace("ó", "o")
+                    .Replace("ú", "u")
+                    .Replace("ü", "u")
+                    .Contains(normalizedName)
+            ) &&
+            (!specialtyId.HasValue ||
+                d.SpecialityId == specialtyId.Value),
+        x => x.Name,
+        nameof(Doctor.Speciality));
+
+    return doctors.Map(d => d.ToResponse());
+}
+
 
     public async Task<DoctorModel.Response> GetByIdAsync(Guid id)
     {
