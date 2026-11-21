@@ -1,5 +1,4 @@
-﻿
-using Dsw2026Tpi.Application.Dtos;
+﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Extensions;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
@@ -182,11 +181,6 @@ namespace Dsw2026Tpi.Application.Services
                     rule.DayOfWeek.ToSpanish(),
                     rule.StartTime,
                     rule.EndTime));
-
-                foreach (var slot in rule.Slots)
-                {
-                    await _persistence.Add(slot);
-                }
             }
 
             return response;
@@ -221,7 +215,9 @@ namespace Dsw2026Tpi.Application.Services
             {
                 try
                 {
-                    await regla.DeleteIfNoBookedSlots(_persistence);
+                    await regla.DeleteIfNoBookedSlots(
+                        _persistence,
+                        DateOnly.FromDateTime(ArgentinaTime.Now));
                 }
                 catch (BusinessRuleException)
                 {

@@ -1,5 +1,4 @@
-﻿
-using Dsw2026Tpi.Application.Services;
+﻿using Dsw2026Tpi.Application.Services;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Logging;
 using Dsw2026Tpi.Domain.Entities;
@@ -35,8 +34,6 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 endTime: new TimeOnly(9, 30)
             );
 
-            slot.Book();
-
             var patient = new Patient(
                 userId: userId,
                 dni: 12345678
@@ -57,19 +54,85 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                     Arg.Any<string[]>())
                 .Returns(appointment);
 
+            _persistence
+                .TryCancelAppointment(appointment.Id, slot.Id)
+                .Returns(true);
+
             // Act
             await _service.DeleteAppointment(appointment.Id, userId);
 
             // Assert
-            Assert.Equal(Estado.CANCELLED, appointment.Estado);
-            Assert.Equal(SlotStatus.AVAILABLE, slot.Status);
+            await _persistence.Received(1)
+                .BeginTransactionAsync();
 
-            await _persistence.Received(1).BeginTransactionAsync();
-            await _persistence.Received(1).Update(appointment);
-            await _persistence.Received(1).Update(slot);
-            await _persistence.Received(1).CommitTransactionAsync();
+            await _persistence.Received(1)
+                .TryCancelAppointment(appointment.Id, slot.Id);
 
-            await _persistence.DidNotReceive().RollbackTransactionAsync();
+            await _persistence.Received(1)
+                .CommitTransactionAsync();
+
+            await _persistence.DidNotReceive()
+                .RollbackTransactionAsync();
+
+            await _persistence.DidNotReceive()
+                .Update(Arg.Any<Appointment>());
+
+            await _persistence.DidNotReceive()
+                .Update(Arg.Any<AvailabilitySlot>());
+        }
+
+        [Fact]
+        public async Task DeleteAppointment_CuandoNoPuedeCancelarElTurno_LanzaConflictExceptionYRevierte()
+        {
+            // Arrange
+            const string userId = "user-123";
+
+            var slot = new AvailabilitySlot(
+                Guid.NewGuid(),
+                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
+                new TimeOnly(9, 0),
+                new TimeOnly(9, 30)
+            );
+
+            var patient = new Patient(
+                userId: userId,
+                dni: 12345678
+            );
+
+            var appointment = new Appointment(
+                patient.Id,
+                slot.Id,
+                "Prueba de conflicto"
+            );
+
+            SetAvailabilitySlot(appointment, slot);
+            SetPatient(appointment, patient);
+
+            _persistence
+                .GetById<Appointment>(
+                    appointment.Id,
+                    Arg.Any<string[]>())
+                .Returns(appointment);
+
+            _persistence
+                .TryCancelAppointment(appointment.Id, slot.Id)
+                .Returns(false);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ConflictException>(
+                () => _service.DeleteAppointment(appointment.Id, userId));
+
+            await _persistence.Received(1)
+                .BeginTransactionAsync();
+
+            await _persistence.Received(1)
+                .TryCancelAppointment(appointment.Id, slot.Id);
+
+            await _persistence.Received(1)
+                .RollbackTransactionAsync();
+
+            await _persistence.DidNotReceive()
+                .CommitTransactionAsync();
         }
 
         [Fact]

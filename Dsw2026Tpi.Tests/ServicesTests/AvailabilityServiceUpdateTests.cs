@@ -62,17 +62,18 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             _feriadoService.EsFeriado(Arg.Any<DateOnly>()).Returns(false);
 
-            _persistence.Add(Arg.Any<AvailabilityRule>())
-                .Returns<AvailabilityRule>(
-                    c => c.Arg<AvailabilityRule>()
-                        ?? throw new InvalidOperationException(
-                            "No se recibió una regla de disponibilidad."));
+            AvailabilityRule? reglaNueva = null;
 
-            _persistence.Add(Arg.Any<AvailabilitySlot>())
-                .Returns<AvailabilitySlot>(
-                    c => c.Arg<AvailabilitySlot>()
+            _persistence.Add(Arg.Any<AvailabilityRule>())
+                .Returns<AvailabilityRule>(call =>
+                {
+                    var regla = call.Arg<AvailabilityRule>()
                         ?? throw new InvalidOperationException(
-                            "No se recibió un turno."));
+                            "No se recibió una regla de disponibilidad.");
+
+                    reglaNueva = regla;
+                    return regla;
+                });
 
             // Act
             var service = CreateService();
@@ -92,10 +93,11 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             await _persistence.DidNotReceiveWithAnyArgs()
                 .Delete(Arg.Any<AvailabilitySlot>());
 
-            // Se crean las nuevas disponibilidades.
+            // Se crea la nueva regla con sus turnos relacionados.
             await _persistence.Received(1).Add(Arg.Any<AvailabilityRule>());
-            await _persistence.ReceivedWithAnyArgs()
-                .Add(Arg.Any<AvailabilitySlot>());
+
+            Assert.NotNull(reglaNueva);
+            Assert.NotEmpty(reglaNueva.Slots);
 
             Assert.NotEmpty(response);
             Assert.Single(response);
@@ -174,6 +176,90 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             await _persistence.Received(1).BeginTransactionAsync();
             await _persistence.DidNotReceive().CommitTransactionAsync();
             await _persistence.Received(1).RollbackTransactionAsync();
+        }
+
+        [Fact]
+        public async Task UpdateAvailability_CuandoHaySlotsReservadosPasados_LosConservaYActualizaElMes()
+        {
+            // Arrange
+            var doctorId = Guid.NewGuid();
+            var now = DateTime.Now;
+
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+
+            var reglaExistente = new AvailabilityRule(
+                doctorId,
+                now.Month,
+                now.Year,
+                DayOfWeek.Monday,
+                new TimeOnly(9, 0),
+                new TimeOnly(12, 0));
+
+            var slotReservadoPasado = new AvailabilitySlot(
+                reglaExistente.Id,
+                DateOnly.FromDateTime(now).AddDays(-1),
+                new TimeOnly(9, 0),
+                new TimeOnly(9, 30));
+
+            slotReservadoPasado.Book();
+
+            var request = new AvailabilityModel.Request(
+                doctorId,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new("Miércoles", new TimeOnly(14, 0), new TimeOnly(16, 0))
+                });
+
+            _persistence.GetById<Doctor>(doctorId).Returns(doctor);
+
+            _persistence.GetFiltered<AvailabilityRule>(
+                    Arg.Any<Expression<Func<AvailabilityRule, bool>>>())
+                .Returns(
+                    new List<AvailabilityRule> { reglaExistente },
+                    new List<AvailabilityRule>());
+
+            _persistence.GetFiltered<AvailabilitySlot>(
+                    Arg.Any<Expression<Func<AvailabilitySlot, bool>>>())
+                .Returns(new List<AvailabilitySlot> { slotReservadoPasado });
+
+            _feriadoService.EsFeriado(Arg.Any<DateOnly>()).Returns(false);
+
+            _persistence.Add(Arg.Any<AvailabilityRule>())
+                .Returns<AvailabilityRule>(call =>
+                {
+                    var regla = call.Arg<AvailabilityRule>()
+                        ?? throw new InvalidOperationException(
+                            "No se recibió una regla de disponibilidad.");
+
+                    return regla;
+                });
+
+            var service = CreateService();
+
+            // Act
+            var response = await service.UpdateAvailability(request);
+
+            // Assert: la reserva histórica se conserva.
+            Assert.Equal(SlotStatus.BOOKED, slotReservadoPasado.Status);
+            Assert.False(slotReservadoPasado.Deleted);
+
+            await _persistence.DidNotReceive()
+                .Update(slotReservadoPasado);
+
+            // La regla anterior sí se elimina lógicamente.
+            Assert.True(reglaExistente.Deleted);
+
+            await _persistence.Received(1).Update(reglaExistente);
+
+            // Se crea la nueva disponibilidad.
+            await _persistence.Received(1).Add(Arg.Any<AvailabilityRule>());
+
+            Assert.NotEmpty(response);
+
+            // La transacción finaliza correctamente.
+            await _persistence.Received(1).BeginTransactionAsync();
+            await _persistence.Received(1).CommitTransactionAsync();
+            await _persistence.DidNotReceive().RollbackTransactionAsync();
         }
 
         [Fact]

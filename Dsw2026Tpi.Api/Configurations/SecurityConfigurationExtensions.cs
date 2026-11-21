@@ -219,7 +219,8 @@ public static class SecurityConfigurationExtensions
         {
             options.Password = new PasswordOptions
             {
-                RequiredLength = 8,
+                // Se aceptan DNI de 7 y 8 dígitos.
+                RequiredLength = 7,
                 RequireLowercase = false,
                 RequireUppercase = false,
                 RequireDigit = false,

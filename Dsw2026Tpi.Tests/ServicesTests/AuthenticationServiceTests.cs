@@ -69,7 +69,8 @@ public class AuthenticationServiceTests
 
     private static ApplicationUser CreateUser(
         string email = "usuario@test.com",
-        bool deleted = false)
+        bool deleted = false,
+        string? passwordHash = null)
     {
         return new ApplicationUser
         {
@@ -77,6 +78,7 @@ public class AuthenticationServiceTests
             UserName = email,
             Email = email,
             Deleted = deleted,
+            PasswordHash = passwordHash,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -105,7 +107,7 @@ public class AuthenticationServiceTests
         var response = await service.LoginAdmin(request);
 
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
-        Assert.Equal(Roles.Administrator, response.Role);
+        Assert.Equal(Roles.Administrator.ToUpperInvariant(), response.Role);
     }
 
     [Fact]
@@ -178,9 +180,12 @@ public class AuthenticationServiceTests
     }
 
     [Fact]
-    public async Task LoginPatient_CuandoElPacienteExisteYElDniCoincide_RetornaToken()
+    public async Task LoginPatient_CuandoElPacienteExisteYLaContrasenaEsValida_RetornaToken()
     {
-        var user = CreateUser("paciente@test.com");
+        var user = CreateUser(
+            "paciente@test.com",
+            passwordHash: "hash-de-prueba");
+
         var patient = new Patient(user.Id, 12345678);
 
         var request = new LoginPatientModel.Request(
@@ -197,12 +202,50 @@ public class AuthenticationServiceTests
                 Arg.Any<Expression<Func<Patient, bool>>>())
             .Returns(patient);
 
+        _signInService.CheckPassword(user, "12345678")
+            .Returns(true);
+
         var service = CreateService();
 
         var response = await service.LoginPatient(request);
 
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
-        Assert.Equal(Roles.Patient, response.Role);
+        Assert.Equal(Roles.Patient.ToUpperInvariant(), response.Role);
+
+        await _signInService.Received(1)
+            .CheckPassword(user, "12345678");
+    }
+
+    [Fact]
+    public async Task LoginPatient_CuandoLaContrasenaEsIncorrecta_LanzaAuthenticationException()
+    {
+        var user = CreateUser(
+            "paciente@test.com",
+            passwordHash: "hash-de-prueba");
+
+        var patient = new Patient(user.Id, 12345678);
+
+        var request = new LoginPatientModel.Request(
+            "paciente@test.com",
+            87654321);
+
+        _userManager.FindByEmailAsync(request.Email)
+            .Returns(user);
+
+        _userManager.IsInRoleAsync(user, Roles.Patient)
+            .Returns(true);
+
+        _persistence.First<Patient>(
+                Arg.Any<Expression<Func<Patient, bool>>>())
+            .Returns(patient);
+
+        _signInService.CheckPassword(user, "87654321")
+            .Returns(false);
+
+        var service = CreateService();
+
+        await Assert.ThrowsAsync<AuthenticationException>(
+            () => service.LoginPatient(request));
     }
 
     [Fact]
@@ -233,7 +276,9 @@ public class AuthenticationServiceTests
     [Fact]
     public async Task LoginPatient_CuandoElUsuarioEstaEliminado_LanzaAuthenticationException()
     {
-        var user = CreateUser("paciente@test.com", deleted: true);
+        var user = CreateUser(
+            "paciente@test.com",
+            deleted: true);
 
         var request = new LoginPatientModel.Request(
             "paciente@test.com",
@@ -252,9 +297,10 @@ public class AuthenticationServiceTests
     }
 
     [Fact]
-    public async Task LoginPatient_CuandoElDniNoCoincide_LanzaAuthenticationException()
+    public async Task LoginPatient_CuandoElDniNoCoincideEnCuentaAntigua_LanzaAuthenticationExceptionYRegistraIntentoFallido()
     {
         var user = CreateUser("paciente@test.com");
+
         var patient = new Patient(user.Id, 12345678);
 
         var request = new LoginPatientModel.Request(
@@ -271,14 +317,156 @@ public class AuthenticationServiceTests
                 Arg.Any<Expression<Func<Patient, bool>>>())
             .Returns(patient);
 
+        _userManager.IsLockedOutAsync(user)
+            .Returns(false);
+
+        _userManager.AccessFailedAsync(user)
+            .Returns(IdentityResult.Success);
+
         var service = CreateService();
 
         await Assert.ThrowsAsync<AuthenticationException>(
             () => service.LoginPatient(request));
+
+        await _userManager.Received(1)
+            .AccessFailedAsync(user);
+
+        await _userManager.DidNotReceive()
+            .AddPasswordAsync(
+                Arg.Any<ApplicationUser>(),
+                Arg.Any<string>());
     }
 
     [Fact]
-    public async Task LoginPatient_CuandoEsUnUsuarioNuevo_CreaUsuarioYPaciente()
+    public async Task LoginPatient_CuandoLaCuentaAntiguaEstaBloqueada_LanzaAuthenticationException()
+    {
+        var user = CreateUser("paciente@test.com");
+
+        var patient = new Patient(user.Id, 12345678);
+
+        var request = new LoginPatientModel.Request(
+            "paciente@test.com",
+            12345678);
+
+        _userManager.FindByEmailAsync(request.Email)
+            .Returns(user);
+
+        _userManager.IsInRoleAsync(user, Roles.Patient)
+            .Returns(true);
+
+        _persistence.First<Patient>(
+                Arg.Any<Expression<Func<Patient, bool>>>())
+            .Returns(patient);
+
+        _userManager.IsLockedOutAsync(user)
+            .Returns(true);
+
+        var service = CreateService();
+
+        await Assert.ThrowsAsync<AuthenticationException>(
+            () => service.LoginPatient(request));
+
+        await _userManager.Received(1)
+            .IsLockedOutAsync(user);
+
+        await _userManager.DidNotReceive()
+            .AccessFailedAsync(user);
+
+        await _userManager.DidNotReceive()
+            .AddPasswordAsync(
+                Arg.Any<ApplicationUser>(),
+                Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task LoginPatient_CuandoLaCuentaAntiguaNoTienePassword_LaMigra()
+    {
+        var user = CreateUser("paciente@test.com");
+
+        var patient = new Patient(user.Id, 12345678);
+
+        var request = new LoginPatientModel.Request(
+            "paciente@test.com",
+            12345678);
+
+        _userManager.FindByEmailAsync(request.Email)
+            .Returns(user);
+
+        _userManager.IsInRoleAsync(user, Roles.Patient)
+            .Returns(true);
+
+        _persistence.First<Patient>(
+                Arg.Any<Expression<Func<Patient, bool>>>())
+            .Returns(patient);
+
+        _userManager.IsLockedOutAsync(user)
+            .Returns(false);
+
+        _userManager.AddPasswordAsync(user, "12345678")
+            .Returns(IdentityResult.Success);
+
+        _userManager.ResetAccessFailedCountAsync(user)
+            .Returns(IdentityResult.Success);
+
+        var service = CreateService();
+
+        var response = await service.LoginPatient(request);
+
+        Assert.False(string.IsNullOrWhiteSpace(response.Token));
+        Assert.Equal(Roles.Patient.ToUpperInvariant(), response.Role);
+
+        await _userManager.Received(1)
+            .AddPasswordAsync(user, "12345678");
+
+        await _userManager.Received(1)
+            .ResetAccessFailedCountAsync(user);
+
+        await _signInService.DidNotReceiveWithAnyArgs()
+            .CheckPassword(
+                Arg.Any<ApplicationUser>(),
+                Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task LoginPatient_CuandoFallaLaMigracionDePassword_LanzaConflictException()
+    {
+        var user = CreateUser("paciente@test.com");
+
+        var patient = new Patient(user.Id, 12345678);
+
+        var request = new LoginPatientModel.Request(
+            "paciente@test.com",
+            12345678);
+
+        _userManager.FindByEmailAsync(request.Email)
+            .Returns(user);
+
+        _userManager.IsInRoleAsync(user, Roles.Patient)
+            .Returns(true);
+
+        _persistence.First<Patient>(
+                Arg.Any<Expression<Func<Patient, bool>>>())
+            .Returns(patient);
+
+        _userManager.IsLockedOutAsync(user)
+            .Returns(false);
+
+        _userManager.AddPasswordAsync(user, "12345678")
+            .Returns(IdentityResult.Failed(
+                new IdentityError
+                {
+                    Code = "PasswordError",
+                    Description = "No se pudo establecer la contraseña."
+                }));
+
+        var service = CreateService();
+
+        await Assert.ThrowsAsync<ConflictException>(
+            () => service.LoginPatient(request));
+    }
+
+    [Fact]
+    public async Task LoginPatient_CuandoEsUnUsuarioNuevo_CreaUsuarioYPacienteConPassword()
     {
         var request = new LoginPatientModel.Request(
             "nuevo@test.com",
@@ -287,7 +475,9 @@ public class AuthenticationServiceTests
         _userManager.FindByEmailAsync(request.Email)
             .Returns((ApplicationUser?)null);
 
-        _userManager.CreateAsync(Arg.Any<ApplicationUser>())
+        _userManager.CreateAsync(
+                Arg.Any<ApplicationUser>(),
+                Arg.Any<string>())
             .Returns(IdentityResult.Success);
 
         _userManager.AddToRoleAsync(
@@ -300,11 +490,13 @@ public class AuthenticationServiceTests
         var response = await service.LoginPatient(request);
 
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
-        Assert.Equal(Roles.Patient, response.Role);
+        Assert.Equal(Roles.Patient.ToUpperInvariant(), response.Role);
 
         await _userManager.Received(1)
-            .CreateAsync(Arg.Is<ApplicationUser>(
-                user => user != null && user.Email == request.Email));
+            .CreateAsync(
+                Arg.Is<ApplicationUser>(
+                    user => user != null && user.Email == request.Email),
+                "12345678");
 
         await _userManager.Received(1)
             .AddToRoleAsync(
@@ -318,6 +510,43 @@ public class AuthenticationServiceTests
     }
 
     [Fact]
+    public async Task LoginPatient_CuandoElDniTieneSieteDigitos_CreaUsuarioYPaciente()
+    {
+        var request = new LoginPatientModel.Request(
+            "nuevo@test.com",
+            1234567);
+
+        _userManager.FindByEmailAsync(request.Email)
+            .Returns((ApplicationUser?)null);
+
+        _userManager.CreateAsync(
+                Arg.Any<ApplicationUser>(),
+                Arg.Any<string>())
+            .Returns(IdentityResult.Success);
+
+        _userManager.AddToRoleAsync(
+                Arg.Any<ApplicationUser>(),
+                Roles.Patient)
+            .Returns(IdentityResult.Success);
+
+        var service = CreateService();
+
+        var response = await service.LoginPatient(request);
+
+        Assert.False(string.IsNullOrWhiteSpace(response.Token));
+
+        await _userManager.Received(1)
+            .CreateAsync(
+                Arg.Is<ApplicationUser>(
+                    user => user != null && user.Email == request.Email),
+                "1234567");
+
+        await _persistence.Received(1)
+            .Add(Arg.Is<Patient>(
+                patient => patient != null && patient.Dni == 1234567));
+    }
+
+    [Fact]
     public async Task LoginPatient_CuandoFallaLaAsignacionDelRol_EliminaElUsuarioYLanzaConflictException()
     {
         var request = new LoginPatientModel.Request(
@@ -327,7 +556,9 @@ public class AuthenticationServiceTests
         _userManager.FindByEmailAsync(request.Email)
             .Returns((ApplicationUser?)null);
 
-        _userManager.CreateAsync(Arg.Any<ApplicationUser>())
+        _userManager.CreateAsync(
+                Arg.Any<ApplicationUser>(),
+                Arg.Any<string>())
             .Returns(IdentityResult.Success);
 
         _userManager.AddToRoleAsync(
@@ -362,12 +593,14 @@ public class AuthenticationServiceTests
         _userManager.FindByEmailAsync(request.Email)
             .Returns((ApplicationUser?)null);
 
-        _userManager.CreateAsync(Arg.Any<ApplicationUser>())
+        _userManager.CreateAsync(
+                Arg.Any<ApplicationUser>(),
+                Arg.Any<string>())
             .Returns(IdentityResult.Failed(
                 new IdentityError
                 {
-                    Code = "DuplicateEmail",
-                    Description = "El email ya existe."
+                    Code = "DuplicateUserName",
+                    Description = "El usuario ya existe."
                 }));
 
         var service = CreateService();

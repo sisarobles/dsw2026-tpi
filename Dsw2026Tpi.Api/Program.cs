@@ -1,10 +1,12 @@
 using Dsw2026Tpi.Api.Configurations;
 using Dsw2026Tpi.Api.Middlewares;
-using Serilog;
-using System.Text.Json.Serialization;
+using Dsw2026Tpi.CrossCutting.Models;
 using Dsw2026Tpi.Data;
 using Dsw2026Tpi.Data.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using System.Text.Json.Serialization;
 
 namespace Dsw2026Tpi.Api;
 
@@ -29,51 +31,86 @@ public class Program
             builder.Services.AddApplicationPersistence(builder.Configuration);
             builder.Services.AddAppCors(builder.Configuration, builder.Environment);
             builder.Services.AddAppDependencies();
-            builder.Services.AddControllers().AddJsonOptions(options =>
+
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(
+                        new JsonStringEnumConverter());
+                });
+
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                options.SuppressMapClientErrors = true;
+
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var error = new ErrorResponse(
+                        "VALIDATION_ERROR",
+                        "La solicitud contiene datos inválidos.");
+
+                    foreach (var entry in context.ModelState)
+                    {
+                        var field = string.IsNullOrWhiteSpace(entry.Key)
+                            ? "request"
+                            : entry.Key;
+
+                        foreach (var modelError in entry.Value!.Errors)
+                        {
+                            var message = !string.IsNullOrWhiteSpace(
+                                modelError.ErrorMessage)
+                                ? modelError.ErrorMessage
+                                : "El valor enviado no es válido.";
+
+                            error.AddDetail(field, message);
+                        }
+                    }
+
+                    return new BadRequestObjectResult(error);
+                };
             });
+
             builder.Services.AddHealthChecks();
             builder.Services.AddAppRateLimiting(builder.Configuration);
 
-
             var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    await using var scope = app.Services.CreateAsyncScope();
+            if (app.Environment.IsDevelopment())
+            {
+                await using var scope = app.Services.CreateAsyncScope();
 
-    var applicationDbContext =
-        scope.ServiceProvider.GetRequiredService<Dsw2026TpiDbContext>();
+                var applicationDbContext =
+                    scope.ServiceProvider.GetRequiredService<Dsw2026TpiDbContext>();
 
-    var authenticationDbContext =
-        scope.ServiceProvider.GetRequiredService<AuthenticationDbContext>();
+                var authenticationDbContext =
+                    scope.ServiceProvider.GetRequiredService<AuthenticationDbContext>();
 
-    await applicationDbContext.Database.MigrateAsync();
-    await authenticationDbContext.Database.MigrateAsync();
-}
+                await applicationDbContext.Database.MigrateAsync();
+                await authenticationDbContext.Database.MigrateAsync();
+            }
 
-await app.SeedDatabaseAsync();
+            await app.SeedDatabaseAsync();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseSerilogRequestLogging();
 
             if (app.Environment.IsProduction())
             {
-                app.UseHttpsRedirection(); 
+                app.UseHttpsRedirection();
             }
+
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger(); 
-                app.UseSwaggerUI(); 
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseRateLimiter(); 
-          
-            app.MapControllers(); 
+            app.UseRateLimiter();
+
+            app.MapControllers();
             app.MapHealthChecks("/health-check");
 
             Log.Information("Aplicación iniciada correctamente");
@@ -82,7 +119,8 @@ await app.SeedDatabaseAsync();
         }
         catch (HostAbortedException)
         {
-            Log.Information("El host fue abortado (normal durante migraciones de EF Core)");
+            Log.Information(
+                "El host fue abortado (normal durante migraciones de EF Core)");
         }
         catch (Exception ex)
         {
@@ -96,4 +134,3 @@ await app.SeedDatabaseAsync();
         }
     }
 }
-

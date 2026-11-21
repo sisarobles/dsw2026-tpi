@@ -29,13 +29,11 @@ namespace Dsw2026Tpi.Application.Services
             request.Patient.ValidatePatient();
 
             var slot = await _persistence.GetById<AvailabilitySlot>(
-                request.AvailabilitySlotId,
-                nameof(AvailabilitySlot.AvailabilityRule))
+                request.EffectiveAvailabilitySlotId,                nameof(AvailabilitySlot.AvailabilityRule))
                 ?? throw new EntityNotFoundException(nameof(AvailabilitySlot));
 
             slot.ValidateSlotForBooking(request.DoctorId);
 
-            // Verifica que el médico asociado siga activo.
             var doctor = await _persistence.GetById<Doctor>(request.DoctorId);
 
             if (doctor == null || !doctor.IsActive)
@@ -134,11 +132,16 @@ namespace Dsw2026Tpi.Application.Services
 
             try
             {
-                appointment.Cancel(appointment.AvailabilitySlot!);
+                var cancelled = await _persistence.TryCancelAppointment(
+                    appointment.Id,
+                    appointment.AvailabilitySlotId);
 
-                await _persistence.Update<Appointment>(appointment);
-                await _persistence.Update<AvailabilitySlot>(
-                    appointment.AvailabilitySlot!);
+                if (!cancelled)
+                {
+                    throw new ConflictException(
+                        ErrorCodes.CANCEL_APPOINTMENT,
+                        nameof(ErrorCodes.CANCEL_APPOINTMENT));
+                }
 
                 await _persistence.CommitTransactionAsync();
             }

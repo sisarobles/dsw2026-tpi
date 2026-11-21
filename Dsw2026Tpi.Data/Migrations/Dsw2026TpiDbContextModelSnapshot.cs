@@ -15,7 +15,7 @@ namespace Dsw2026Tpi.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.15");
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.Appointment", b =>
                 {
@@ -89,7 +89,8 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DoctorId", "Year", "Month", "DayOfWeek", "StartTime", "EndTime")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Deleted\" = 0");
 
                     b.ToTable("AvailabilityRules", (string)null);
                 });

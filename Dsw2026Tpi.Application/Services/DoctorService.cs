@@ -37,7 +37,7 @@ public class DoctorService : IDoctorService
     public async Task<DoctorModel.Response> GetByIdAsync(Guid id)
     {
         var doctor = await _persistence.GetById<Doctor>(id)
-         ?? throw new EntityNotFoundException(nameof(Doctor));
+            ?? throw new EntityNotFoundException(nameof(Doctor));
 
         if (!doctor.IsActive)
             throw new EntityNotFoundException(nameof(Doctor));
@@ -53,36 +53,54 @@ public class DoctorService : IDoctorService
         return doctor.ToResponse(speciality);
     }
 
-    public async Task<DoctorModel.Response> CreateAsync(DoctorModel.Request request)
+    public async Task<DoctorModel.Response> CreateAsync(
+        DoctorModel.Request request)
     {
         request.Name.ValidateName();
+        request.LicenseNumber.ValidateLicenseNumber();
 
-        var speciality = await _persistence.GetById<Speciality>(request.SpecialtyId)
+        var speciality = await _persistence.GetById<Speciality>(
+            request.SpecialtyId)
             ?? throw new EntityNotFoundException(nameof(Speciality));
 
         if (!speciality.IsActive)
-            throw new EntityNotFoundException(nameof(Speciality)); 
+            throw new EntityNotFoundException(nameof(Speciality));
 
-        var doctor = new Doctor(request.Name, request.LicenseNumber, request.SpecialtyId);
+        var doctor = new Doctor(
+            request.Name,
+            request.LicenseNumber,
+            request.SpecialtyId);
+
         await _persistence.Add(doctor);
 
         return doctor.ToResponse(speciality);
     }
-
-    public async Task<DoctorModel.Response> UpdateAsync(Guid id, DoctorModel.Request request)
+ 
+    public async Task<DoctorModel.Response> UpdateAsync(
+        Guid id,
+        DoctorModel.Request request)
     {
         request.Name.ValidateName();
+        request.LicenseNumber.ValidateLicenseNumber();
 
         var doctor = await _persistence.GetById<Doctor>(id)
             ?? throw new EntityNotFoundException(nameof(Doctor));
 
-        var speciality = await _persistence.GetById<Speciality>(request.SpecialtyId)
+        if (!doctor.IsActive)
+            throw new EntityNotFoundException(nameof(Doctor));
+
+        var speciality = await _persistence.GetById<Speciality>(
+            request.SpecialtyId)
             ?? throw new EntityNotFoundException(nameof(Speciality));
 
         if (!speciality.IsActive)
-            throw new EntityNotFoundException(nameof(Speciality)); 
+            throw new EntityNotFoundException(nameof(Speciality));
 
-        doctor.Update(request.Name, request.LicenseNumber, request.SpecialtyId);
+        doctor.Update(
+            request.Name,
+            request.LicenseNumber,
+            request.SpecialtyId);
+
         await _persistence.Update(doctor);
 
         return doctor.ToResponse(speciality);
@@ -92,7 +110,8 @@ public class DoctorService : IDoctorService
     {
         var doctor = await _persistence.GetById<Doctor>(id);
 
-        if (doctor == null) return false;
+        if (doctor == null)
+            return false;
 
         doctor.Deactivate();
 

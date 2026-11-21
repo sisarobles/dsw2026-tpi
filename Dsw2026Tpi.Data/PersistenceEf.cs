@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Data.Sqlite;
+using Dsw2026Tpi.CrossCutting.Exceptions;
 
 namespace Dsw2026Tpi.Data;
 
@@ -17,7 +18,6 @@ public class PersistenceEf: IPersistence
         _context = context;
     }
 
-
     public async Task<T> Add<T>(T entity) where T : EntityBase
     {
         await _context.AddAsync(entity);
@@ -29,17 +29,30 @@ public class PersistenceEf: IPersistence
         }
         catch (DbUpdateException ex)
             when (entity is Appointment &&
-              ex.InnerException is SqliteException sqliteException &&
-              sqliteException.SqliteErrorCode == 19 &&
-              sqliteException.SqliteExtendedErrorCode == 2067 &&
-              sqliteException.Message.Contains(
-                "Appointments.AvailabilitySlotId",
-               StringComparison.OrdinalIgnoreCase))
-            {
-                throw new Dsw2026Tpi.CrossCutting.Exceptions.ConflictException(
-                    Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT,
-                    nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT));
-            }
+                ex.InnerException is SqliteException sqliteException &&
+                sqliteException.SqliteErrorCode == 19 &&
+                sqliteException.SqliteExtendedErrorCode == 2067 &&
+                sqliteException.Message.Contains(
+                    "Appointments.AvailabilitySlotId",
+                    StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ConflictException(
+                Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT,
+                nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.APPOINTMENT_CONFLICT));
+        }
+        catch (DbUpdateException ex)
+            when (entity is Patient &&
+                ex.InnerException is SqliteException sqliteException &&
+                sqliteException.SqliteErrorCode == 19 &&
+                sqliteException.SqliteExtendedErrorCode == 2067 &&
+                sqliteException.Message.Contains(
+                    "Patients.Dni",
+                    StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ConflictException(
+                Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.REGISTER_USER_CONFLICT,
+                nameof(Dsw2026Tpi.CrossCutting.Resources.ErrorCodes.REGISTER_USER_CONFLICT));
+        }
     }
 
     public async Task<T> Delete<T>(T entity) where T : EntityBase
@@ -77,50 +90,58 @@ public class PersistenceEf: IPersistence
         return entity;
     }
 
-    public async Task<Pagination<T>> Paginate<T, TKey>(int pageSize, int pageIndex, Expression<Func<T, bool>> predicate, Expression<Func<T, TKey>> sortOrder, params string[] includes) where T : EntityBase
+    
+    public async Task<Pagination<T>> Paginate<T, TKey>(
+        int pageSize,
+        int pageIndex,
+        Expression<Func<T, bool>> predicate,
+        Expression<Func<T, TKey>> sortOrder,
+        params string[] includes)
+        where T : EntityBase
     {
-        pageSize = Math.Abs(pageSize);
-        pageIndex = Math.Abs(pageIndex) == 0 ? 0 : Math.Abs(pageIndex) - 1;
+        if (pageSize <= 0)
+        {
+            throw new ValidationException();
+        }
+
+        if (pageIndex < 0)
+        {
+            throw new ValidationException();
+        }
+
+        // Se conserva la compatibilidad:
+        // pageIndex 0 y 1 representan la primera página.
+        var normalizedPageIndex = pageIndex == 0
+            ? 0
+            : pageIndex - 1;
 
         var filtered = Include(_context.Set<T>(), includes)
-                 .Where(predicate)
-                 .OrderBy(sortOrder);
+            .Where(predicate)
+            .OrderBy(sortOrder);
 
         var total = await filtered.CountAsync();
 
-        
-        async Task<Pagination<T>> GetPage(int skip, int take)
-        {
-            var data = await filtered.Skip(skip)
-                    .Take(take)
-                    .ToListAsync();
+        var skip = (long)normalizedPageIndex * pageSize;
 
-            return new Pagination<T>(pageSize, pageIndex, data, total);
-        }
-        
-        if (total > pageSize * pageIndex)
+        if (skip >= total)
         {
-            return await GetPage(pageIndex * pageSize, pageSize);
+            return new Pagination<T>(
+                pageSize,
+                normalizedPageIndex,
+                [],
+                total);
         }
 
-        if (total < pageSize)
-        {
-            return new Pagination<T>(pageSize, pageIndex, await filtered.ToListAsync(), total);
-        }
+        var data = await filtered
+            .Skip((int)skip)
+            .Take(pageSize)
+            .ToListAsync();
 
-        var targetPageIndex = pageIndex - 1;
-
-        while (true)
-        {
-            if (total > targetPageIndex * pageSize)
-            {
-                return await GetPage(targetPageIndex * pageSize, pageSize);
-            }
-
-            targetPageIndex--;
-
-            if (targetPageIndex < 0) return new Pagination<T>(pageSize, 0,[], 0);
-        }
+        return new Pagination<T>(
+            pageSize,
+            normalizedPageIndex,
+            data,
+            total);
     }
 
     private static IQueryable<T> Include<T>(IQueryable<T> query, string[] includes) where T : EntityBase
@@ -186,12 +207,44 @@ public class PersistenceEf: IPersistence
             .Where(slot =>
                 slot.Id == slotId &&
                 slot.Status == SlotStatus.AVAILABLE &&
-                !slot.Deleted)
+                !slot.Deleted &&
+                !slot.AvailabilityRule!.Deleted)
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(
                     slot => slot.Status,
                     SlotStatus.BOOKED));
 
         return affectedRows == 1;
+    }
+
+    public async Task<bool> TryCancelAppointment(
+    Guid appointmentId,
+    Guid slotId)
+    {
+        var cancelledAppointments = await _context.Set<Appointment>()
+            .Where(appointment =>
+                appointment.Id == appointmentId &&
+                appointment.AvailabilitySlotId == slotId &&
+                appointment.Estado == Estado.BOOKED)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(
+                    appointment => appointment.Estado,
+                    Estado.CANCELLED));
+
+        if (cancelledAppointments != 1)
+        {
+            return false;
+        }
+
+        var releasedSlots = await _context.Set<AvailabilitySlot>()
+            .Where(slot =>
+                slot.Id == slotId &&
+                slot.Status == SlotStatus.BOOKED)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(
+                    slot => slot.Status,
+                    SlotStatus.AVAILABLE));
+
+        return releasedSlots == 1;
     }
 }
