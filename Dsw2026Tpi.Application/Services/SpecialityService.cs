@@ -31,18 +31,47 @@ namespace Dsw2026Tpi.Application.Services
             );
         }
 
-        public async Task<Pagination<SpecialityModel.Response>> GetAllAsync(int pageSize, int pageIndex, string? name = null)
-        {
-            var specialities = await _persistence.Paginate<Speciality, string>(pageSize, pageIndex, s => s.IsActive &&
-                (string.IsNullOrWhiteSpace(name) || s.Name.Contains(name)), x => x.Name);
+        
+            public async Task<Pagination<SpecialityModel.Response>> GetAllAsync(
+                int pageSize,
+                int pageIndex,
+                string? name = null)
+            {
+                var normalizedName = name?
+                    .ToLowerInvariant()
+                    .Replace("á", "a")
+                    .Replace("é", "e")
+                    .Replace("í", "i")
+                    .Replace("ó", "o")
+                    .Replace("ú", "u")
+                    .Replace("ü", "u");
 
-            return specialities.Map(s => new SpecialityModel.Response(
-                s.Id,
-                s.Name,
-                s.Description,
-                s.IsActive
-            ));
-        }
+                var specialities = await _persistence.Paginate<Speciality, string>(
+                    pageSize,
+                    pageIndex,
+                    s => s.IsActive &&
+                        (
+                            string.IsNullOrWhiteSpace(normalizedName) ||
+                            s.Name.ToLower()
+                                .Replace("á", "a")
+                                .Replace("é", "e")
+                                .Replace("í", "i")
+                                .Replace("ó", "o")
+                                .Replace("ú", "u")
+                                .Replace("ü", "u")
+                                .Contains(normalizedName)
+                        ),
+                    x => x.Name
+                );
+
+                return specialities.Map(s => new SpecialityModel.Response(
+                    s.Id,
+                    s.Name,
+                    s.Description,
+                    s.IsActive
+                ));
+            }
+
 
         public async Task<SpecialityModel.Response> GetByIdAsync(Guid id)
         {
