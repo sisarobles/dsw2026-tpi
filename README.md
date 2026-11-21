@@ -114,7 +114,7 @@ La clave JWT debe tener al menos 32 bytes.
 
 Si el proyecto ya tiene configurado un `UserSecretsId`, no es necesario repetir `dotnet user-secrets init`.
 
-La cuenta administrativa inicial se crea a partir de los valores de `AdminSeed`. Los roles utilizados por el sistema son `Administrator` y `Patient`.
+La cuenta administrativa inicial se crea a partir de los valores de `AdminSeed`. Los roles utilizados por el sistema son `Administrador` y `Paciente`.
 
 ### Autenticación de pacientes
 
@@ -269,7 +269,9 @@ La API permite gestionar las reservas de atención médica. Las operaciones cont
 | GET | `/api/appointments` | Lista turnos de una fecha; operación administrativa. |
 | GET | `/api/appointments/search` | Busca turnos mediante filtros; operación administrativa. |
 
-La creación de un turno recibe el identificador del espacio de disponibilidad (`availabilitySlotId`). La reserva se realiza únicamente si el espacio continúa disponible.
+La creación de un turno recibe el identificador del espacio de disponibilidad. El nombre recomendado por la consigna es `availabilityId`. También se admite el nombre anterior `availabilitySlotId` para mantener la compatibilidad con los clientes existentes.
+
+La reserva se realiza únicamente si el espacio continúa disponible.
 
 La cancelación modifica el estado del turno y libera el espacio correspondiente cuando la operación es válida.
 
@@ -285,8 +287,8 @@ La API utiliza JWT para autenticar las solicitudes a los recursos protegidos.
 
 Los roles principales son:
 
-- `Administrator`: permite acceder a las operaciones de administración.
-- `Patient`: permite acceder a las operaciones correspondientes a pacientes.
+- `Administrador`: permite acceder a las operaciones de administración.
+- `Paciente`: permite acceder a las operaciones correspondientes a pacientes.
 
 Para acceder a un endpoint protegido, se debe enviar el token en el encabezado HTTP:
 
@@ -294,7 +296,7 @@ Para acceder a un endpoint protegido, se debe enviar el token en el encabezado H
 Authorization: Bearer <TOKEN>
 ```
 
-Las respuestas de autenticación devuelven el rol en mayúsculas (`ADMINISTRATOR` o `PATIENT`), mientras que los roles internos utilizados para las políticas de autorización mantienen sus identificadores configurados en Identity.
+Las respuestas de autenticación devuelven el rol en mayúsculas (`ADMINISTRADOR` o `PACIENTE`). Los roles internos utilizados por Identity y las políticas de autorización son `Administrador` y `Paciente`, respectivamente.
 
 El endpoint de cierre de sesión revoca el token asociado a la sesión. Para utilizarlo, se debe enviar un token válido.
 
@@ -332,7 +334,7 @@ Los errores de validación del modelo también se devuelven utilizando el format
 
 La API implementa limitación de solicitudes para reducir el abuso de los endpoints y controlar la frecuencia de acceso.
 
-Los límites se configuran en `appsettings.json` y pueden sobrescribirse por entorno mediante archivos de configuración específicos.
+Los límites se configuran en `appsettings.json` y pueden sobrescribirse mediante configuraciones específicas del entorno o variables de entorno.
 
 Los grupos de políticas contemplados son:
 
@@ -350,7 +352,7 @@ En la configuración base, los límites se establecen por ventana de un minuto:
 | Appointments | 5 solicitudes |
 | General | 100 solicitudes |
 
-En `Development` se utilizan límites superiores para facilitar las pruebas y el desarrollo local. Estos valores no reemplazan los límites de la configuración base ni deben trasladarse automáticamente a producción.
+Los valores indicados corresponden a la configuración base incluida en `appsettings.json`. El repositorio no incluye una configuración `Development` con límites superiores; cualquier ajuste local debe configurarse explícitamente y no debe trasladarse automáticamente a producción.
 
 Cuando se supera un límite, la API responde con HTTP `429 Too Many Requests`.
 
@@ -381,7 +383,7 @@ Para compilar la solución:
 dotnet build
 ```
 
-**Estado de verificación:** en la última ejecución local se obtuvo una compilación exitosa y 79 pruebas aprobadas, sin errores ni pruebas omitidas. La compilación finalizó sin advertencias y las 79 pruebas automatizadas finalizaron correctamente.
+**Estado de verificación:** en la última ejecución local, la compilación finalizó correctamente, sin advertencias, y las 79 pruebas automatizadas finalizaron correctamente, sin errores ni pruebas omitidas. Este resultado corresponde a la última ejecución realizada y debe actualizarse si se incorporan nuevos cambios.
 
 # Consideraciones adicionales
 

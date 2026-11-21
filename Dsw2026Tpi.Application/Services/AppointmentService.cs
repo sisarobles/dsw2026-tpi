@@ -29,8 +29,7 @@ namespace Dsw2026Tpi.Application.Services
             request.Patient.ValidatePatient();
 
             var slot = await _persistence.GetById<AvailabilitySlot>(
-                request.AvailabilitySlotId,
-                nameof(AvailabilitySlot.AvailabilityRule))
+                request.EffectiveAvailabilitySlotId,                nameof(AvailabilitySlot.AvailabilityRule))
                 ?? throw new EntityNotFoundException(nameof(AvailabilitySlot));
 
             slot.ValidateSlotForBooking(request.DoctorId);

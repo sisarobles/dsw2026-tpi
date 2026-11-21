@@ -1,4 +1,6 @@
-﻿namespace Dsw2026Tpi.Application.Dtos
+﻿using System.Text.Json.Serialization;
+
+namespace Dsw2026Tpi.Application.Dtos
 {
     public record AppointmentModel
     {
@@ -6,7 +8,17 @@
             Guid DoctorId,
             Guid AvailabilitySlotId,
             PatientRequest? Patient,
-            string Reason);
+            string Reason)
+        {
+            // Alias compatible con la consigna.
+            // También se acepta el nombre anterior: availabilitySlotId.
+            [JsonPropertyName("availabilityId")]
+            public Guid? AvailabilityId { get; init; }
+
+            [JsonIgnore]
+            public Guid EffectiveAvailabilitySlotId =>
+                AvailabilityId ?? AvailabilitySlotId;
+        }
 
         public record PatientRequest(long Dni);
 
