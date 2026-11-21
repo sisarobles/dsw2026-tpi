@@ -9,6 +9,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using Xunit;
+using Dsw2026Tpi.Application.Dtos;
 
 namespace Dsw2026Tpi.Tests.ServicesTests
 {
@@ -249,5 +250,106 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                     .Union(secondPageIds)
                     .Count());
         }
+
+        [Fact]
+        public async Task UpdateAvailability_CuandoConservaLosMismosHorarios_NoGeneraConflictoDeIndiceUnico()
+        {
+            // Arrange: SQLite real en memoria.
+            await using var connection =
+                new SqliteConnection("Data Source=:memory:");
+
+            await connection.OpenAsync();
+
+            var options = new DbContextOptionsBuilder<Dsw2026TpiDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            await using var context = new Dsw2026TpiDbContext(options);
+
+            await context.Database.EnsureCreatedAsync();
+
+            var doctor = new Doctor("Dr. Test", "MP-456", null);
+
+            var today = DateOnly.FromDateTime(ArgentinaTime.Now);
+            var dayOfWeek = today.DayOfWeek;
+
+            var startTime = new TimeOnly(9, 0);
+            var endTime = new TimeOnly(12, 0);
+
+            var existingRule = new AvailabilityRule(
+                doctor.Id,
+                today.Month,
+                today.Year,
+                dayOfWeek,
+                startTime,
+                endTime);
+
+            existingRule.GenerateSlots(new[] { today });
+
+            context.Add(doctor);
+            context.Add(existingRule);
+
+            await context.SaveChangesAsync();
+
+            var originalRuleId = existingRule.Id;
+            var originalSlotIds = existingRule.Slots
+                .Select(slot => slot.Id)
+                .ToList();
+
+            IPersistence persistence = new PersistenceEf(context);
+
+            var feriadoService = Substitute.For<IFeriadoService>();
+            feriadoService.EsFeriado(Arg.Any<DateOnly>()).Returns(false);
+
+            var logger = Substitute.For<ILogService>();
+
+            var service = new AvailabilityService(
+                persistence,
+                feriadoService,
+                logger);
+
+            var request = new AvailabilityModel.Request(
+                doctor.Id,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new(
+                        dayOfWeek.ToSpanish(),
+                        startTime,
+                        endTime)
+                });
+
+            // Act: actualizar conservando exactamente el mismo horario.
+            var response = await service.UpdateAvailability(request);
+
+            // Assert: la actualización termina correctamente.
+            Assert.Single(response);
+
+            var rules = await context.Set<AvailabilityRule>()
+                .ToListAsync();
+
+            var oldRule = rules.Single(r => r.Id == originalRuleId);
+            var newRule = rules.Single(r => r.Id != originalRuleId);
+
+            Assert.True(oldRule.Deleted);
+            Assert.False(newRule.Deleted);
+
+            Assert.Equal(oldRule.DoctorId, newRule.DoctorId);
+            Assert.Equal(oldRule.Month, newRule.Month);
+            Assert.Equal(oldRule.Year, newRule.Year);
+            Assert.Equal(oldRule.DayOfWeek, newRule.DayOfWeek);
+            Assert.Equal(oldRule.StartTime, newRule.StartTime);
+            Assert.Equal(oldRule.EndTime, newRule.EndTime);
+
+            var oldSlots = await context.Set<AvailabilitySlot>()
+                .Where(s => originalSlotIds.Contains(s.Id))
+                .ToListAsync();
+
+            Assert.NotEmpty(oldSlots);
+            Assert.All(oldSlots, slot => Assert.True(slot.Deleted));
+
+            var activeRules = rules.Where(r => !r.Deleted).ToList();
+            Assert.Single(activeRules);
+        }
+
     }
 }

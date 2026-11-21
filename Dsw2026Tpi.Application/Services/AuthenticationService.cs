@@ -1,4 +1,4 @@
-﻿
+﻿using System.Globalization;
 using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
@@ -113,13 +113,18 @@ public class AuthenticationService : IAuthenticationService
                 nameof(ErrorCodes.PATIENT_INVALID_DNI));
         }
 
+        var password = request.Dni.ToString(
+            CultureInfo.InvariantCulture);
+
         var user = await _userManager.FindByEmailAsync(request.Email);
 
         if (user == null)
         {
             user = CreateApplicationUser(request.Email);
 
-            var createResult = await _userManager.CreateAsync(user);
+            var createResult = await _userManager.CreateAsync(
+                user,
+                password);
 
             if (!createResult.Succeeded)
             {
@@ -161,8 +166,6 @@ public class AuthenticationService : IAuthenticationService
             }
             catch
             {
-                // Si falla la creación del paciente, intentamos
-                // eliminar el usuario creado en Identity.
                 await _userManager.DeleteAsync(user);
                 throw;
             }
@@ -204,15 +207,69 @@ public class AuthenticationService : IAuthenticationService
                 patient => patient.UserId == user.Id)
                 ?? throw new AuthenticationException();
 
-            if (existingPatient.Dni != request.Dni)
+            if (string.IsNullOrEmpty(user.PasswordHash))
             {
-                await _logService.LogAsync(
-                    "Auth",
-                    "LOGIN_PATIENT_FAILED",
-                    $"DNI no coincide para {request.Email}",
-                    LogLevel.Warning);
+                // Las cuentas antiguas también deben respetar el bloqueo de Identity.
+                if (await _userManager.IsLockedOutAsync(user))
+                {
+                    await _logService.LogAsync(
+                        "Auth",
+                        "LOGIN_PATIENT_LOCKED",
+                        $"Intento de login de cuenta bloqueada: {request.Email}",
+                        LogLevel.Warning);
 
-                throw new AuthenticationException();
+                    throw new AuthenticationException();
+                }
+
+                if (existingPatient.Dni != request.Dni)
+                {
+                    await _userManager.AccessFailedAsync(user);
+
+                    await _logService.LogAsync(
+                        "Auth",
+                        "LOGIN_PATIENT_FAILED",
+                        $"DNI no coincide para {request.Email}",
+                        LogLevel.Warning);
+
+                    throw new AuthenticationException();
+                }
+
+                // Migra la cuenta antigua: Identity almacena el hash del DNI.
+                var passwordResult = await _userManager.AddPasswordAsync(
+                    user,
+                    password);
+
+                if (!passwordResult.Succeeded)
+                {
+                    var exception = new ConflictException(
+                        ErrorCodes.REGISTER_USER_CONFLICT,
+                        nameof(ErrorCodes.REGISTER_USER_CONFLICT));
+
+                    exception.WithDetail(
+                        passwordResult.Errors.Select(
+                            error => (error.Code, error.Description)));
+
+                    throw exception;
+                }
+
+                await _userManager.ResetAccessFailedCountAsync(user);
+            }
+            else
+            {
+                var passwordIsValid = await _signInManager.CheckPassword(
+                    user,
+                    password);
+
+                if (!passwordIsValid)
+                {
+                    await _logService.LogAsync(
+                        "Auth",
+                        "LOGIN_PATIENT_FAILED",
+                        $"Contraseña incorrecta para {request.Email}",
+                        LogLevel.Warning);
+
+                    throw new AuthenticationException();
+                }
             }
         }
 

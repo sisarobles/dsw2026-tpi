@@ -151,6 +151,8 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 .UseSqlite(connection)
                 .Options;
 
+            Guid slotId;
+
             await using (var setupContext = new Dsw2026TpiDbContext(options))
             {
                 await setupContext.Database.MigrateAsync();
@@ -158,18 +160,30 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 await setupContext.Database.ExecuteSqlRawAsync(
                     "PRAGMA foreign_keys = OFF;");
 
-                var slot = new AvailabilitySlot(
+                var tomorrow = DateTime.UtcNow.AddDays(1);
+
+                var rule = new AvailabilityRule(
                     Guid.NewGuid(),
-                    DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
+                    tomorrow.Month,
+                    tomorrow.Year,
+                    tomorrow.DayOfWeek,
+                    new TimeOnly(9, 0),
+                    new TimeOnly(9, 30));
+
+                setupContext.Set<AvailabilityRule>().Add(rule);
+                await setupContext.SaveChangesAsync();
+
+                var slot = new AvailabilitySlot(
+                    rule.Id,
+                    DateOnly.FromDateTime(tomorrow),
                     new TimeOnly(9, 0),
                     new TimeOnly(9, 30));
 
                 setupContext.Set<AvailabilitySlot>().Add(slot);
                 await setupContext.SaveChangesAsync();
-            }
 
-            var slots = await GetSlotIds(options);
-            var slotId = Assert.Single(slots);
+                slotId = slot.Id;
+            }
 
             await using var context1 = new Dsw2026TpiDbContext(options);
             await using var context2 = new Dsw2026TpiDbContext(options);
@@ -193,16 +207,6 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 .SingleAsync(slot => slot.Id == slotId);
 
             Assert.Equal(SlotStatus.BOOKED, savedSlot.Status);
-        }
-
-        private static async Task<List<Guid>> GetSlotIds(
-            DbContextOptions<Dsw2026TpiDbContext> options)
-        {
-            await using var context = new Dsw2026TpiDbContext(options);
-
-            return await context.Set<AvailabilitySlot>()
-                .Select(slot => slot.Id)
-                .ToListAsync();
         }
     }
 }

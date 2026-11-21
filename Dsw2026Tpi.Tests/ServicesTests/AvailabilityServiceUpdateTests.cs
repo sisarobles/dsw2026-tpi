@@ -62,17 +62,18 @@ namespace Dsw2026Tpi.Tests.ServicesTests
 
             _feriadoService.EsFeriado(Arg.Any<DateOnly>()).Returns(false);
 
-            _persistence.Add(Arg.Any<AvailabilityRule>())
-                .Returns<AvailabilityRule>(
-                    c => c.Arg<AvailabilityRule>()
-                        ?? throw new InvalidOperationException(
-                            "No se recibió una regla de disponibilidad."));
+            AvailabilityRule? reglaNueva = null;
 
-            _persistence.Add(Arg.Any<AvailabilitySlot>())
-                .Returns<AvailabilitySlot>(
-                    c => c.Arg<AvailabilitySlot>()
+            _persistence.Add(Arg.Any<AvailabilityRule>())
+                .Returns<AvailabilityRule>(call =>
+                {
+                    var regla = call.Arg<AvailabilityRule>()
                         ?? throw new InvalidOperationException(
-                            "No se recibió un turno."));
+                            "No se recibió una regla de disponibilidad.");
+
+                    reglaNueva = regla;
+                    return regla;
+                });
 
             // Act
             var service = CreateService();
@@ -92,10 +93,11 @@ namespace Dsw2026Tpi.Tests.ServicesTests
             await _persistence.DidNotReceiveWithAnyArgs()
                 .Delete(Arg.Any<AvailabilitySlot>());
 
-            // Se crean las nuevas disponibilidades.
+            // Se crea la nueva regla con sus turnos relacionados.
             await _persistence.Received(1).Add(Arg.Any<AvailabilityRule>());
-            await _persistence.ReceivedWithAnyArgs()
-                .Add(Arg.Any<AvailabilitySlot>());
+
+            Assert.NotNull(reglaNueva);
+            Assert.NotEmpty(reglaNueva.Slots);
 
             Assert.NotEmpty(response);
             Assert.Single(response);

@@ -134,11 +134,16 @@ namespace Dsw2026Tpi.Application.Services
 
             try
             {
-                appointment.Cancel(appointment.AvailabilitySlot!);
+                var cancelled = await _persistence.TryCancelAppointment(
+                    appointment.Id,
+                    appointment.AvailabilitySlotId);
 
-                await _persistence.Update<Appointment>(appointment);
-                await _persistence.Update<AvailabilitySlot>(
-                    appointment.AvailabilitySlot!);
+                if (!cancelled)
+                {
+                    throw new ConflictException(
+                        ErrorCodes.APPOINTMENT_CONFLICT,
+                        nameof(ErrorCodes.APPOINTMENT_CONFLICT));
+                }
 
                 await _persistence.CommitTransactionAsync();
             }

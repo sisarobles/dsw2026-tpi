@@ -47,45 +47,44 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 .Add(Arg.Any<AvailabilitySlot>());
         }
 
-
         [Fact]
         public async Task CreateAvailability_CuandoDoctorEstaInactivo_LanzaEntityNotFoundException()
-            {
-                // Arrange
-                var doctorId = Guid.NewGuid();
+        {
+            // Arrange
+            var doctorId = Guid.NewGuid();
 
-                var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
-                doctor.Deactivate();
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+            doctor.Deactivate();
 
-                var request = new AvailabilityModel.Request(
-                    doctorId,
-                    new List<AvailabilityModel.DayRequest>
-                    {
-                        new("Lunes", new TimeOnly(9, 0), new TimeOnly(12, 0))
-                    });
+            var request = new AvailabilityModel.Request(
+                doctorId,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new("Lunes", new TimeOnly(9, 0), new TimeOnly(12, 0))
+                });
 
-                _persistence.GetById<Doctor>(doctorId)
-                    .Returns(doctor);
+            _persistence.GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
-                var service = CreateService();
+            var service = CreateService();
 
-                // Act & Assert
-                await Assert.ThrowsAsync<EntityNotFoundException>(
-                    () => service.CreateAvailability(request));
+            // Act & Assert
+            await Assert.ThrowsAsync<EntityNotFoundException>(
+                () => service.CreateAvailability(request));
 
-                await _persistence.DidNotReceiveWithAnyArgs()
-                    .Add(Arg.Any<AvailabilityRule>());
+            await _persistence.DidNotReceiveWithAnyArgs()
+                .Add(Arg.Any<AvailabilityRule>());
 
-                await _persistence.DidNotReceiveWithAnyArgs()
-                    .Add(Arg.Any<AvailabilitySlot>());
-            }
+            await _persistence.DidNotReceiveWithAnyArgs()
+                .Add(Arg.Any<AvailabilitySlot>());
+        }
 
         [Fact]
         public async Task CreateAvailability_CuandoHorariosSeSuperponen_LanzaBusinessRuleException()
         {
             // Arrange
             var doctorId = Guid.NewGuid();
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
 
@@ -125,235 +124,246 @@ namespace Dsw2026Tpi.Tests.ServicesTests
                 .Add(Arg.Any<AvailabilitySlot>());
         }
 
-
-[Fact]
-public async Task CreateAvailability_CuandoRangoHorarioEsInvalido_LanzaValidationException()
-{
-    // Arrange
-    var doctorId = Guid.NewGuid();
-
-    var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
-
-    var request = new AvailabilityModel.Request(
-        doctorId,
-        new List<AvailabilityModel.DayRequest>
+        [Fact]
+        public async Task CreateAvailability_CuandoRangoHorarioEsInvalido_LanzaValidationException()
         {
-            new("Lunes", new TimeOnly(15, 0), new TimeOnly(9, 0))
-        });
+            // Arrange
+            var doctorId = Guid.NewGuid();
 
-    _persistence.GetById<Doctor>(doctorId)
-        .Returns(doctor);
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
 
-    var service = CreateService();
+            var request = new AvailabilityModel.Request(
+                doctorId,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new("Lunes", new TimeOnly(15, 0), new TimeOnly(9, 0))
+                });
 
-    // Act & Assert
-    await Assert.ThrowsAsync<ValidationException>(
-        () => service.CreateAvailability(request));
+            _persistence.GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
-    await _persistence.DidNotReceiveWithAnyArgs()
-        .Add(Arg.Any<AvailabilityRule>());
+            var service = CreateService();
 
-    await _persistence.DidNotReceiveWithAnyArgs()
-        .Add(Arg.Any<AvailabilitySlot>());
-}
+            // Act & Assert
+            await Assert.ThrowsAsync<ValidationException>(
+                () => service.CreateAvailability(request));
 
+            await _persistence.DidNotReceiveWithAnyArgs()
+                .Add(Arg.Any<AvailabilityRule>());
 
-[Fact]
-public async Task CreateAvailability_CuandoHorarioEsValido_GeneraSlotsDe30Minutos()
-{
-    // Arrange
-    var doctorId = Guid.NewGuid();
-    var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+            await _persistence.DidNotReceiveWithAnyArgs()
+                .Add(Arg.Any<AvailabilitySlot>());
+        }
 
-    var today = DateOnly.FromDateTime(DateTime.UtcNow);
-    var day = today.DayOfWeek;
-
-    var dayNames = new Dictionary<DayOfWeek, string>
-    {
-        { DayOfWeek.Monday, "Lunes" },
-        { DayOfWeek.Tuesday, "Martes" },
-        { DayOfWeek.Wednesday, "Miércoles" },
-        { DayOfWeek.Thursday, "Jueves" },
-        { DayOfWeek.Friday, "Viernes" },
-        { DayOfWeek.Saturday, "Sábado" },
-        { DayOfWeek.Sunday, "Domingo" }
-    };
-
-    var request = new AvailabilityModel.Request(
-        doctorId,
-        new List<AvailabilityModel.DayRequest>
+        [Fact]
+        public async Task CreateAvailability_CuandoHorarioEsValido_GeneraSlotsDe30Minutos()
         {
-            new(dayNames[day], new TimeOnly(9, 0), new TimeOnly(11, 0))
-        });
+            // Arrange
+            var doctorId = Guid.NewGuid();
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
 
-    _persistence.GetById<Doctor>(doctorId)
-        .Returns(doctor);
+            // Elegimos un día futuro para evitar que los horarios
+            // queden en el pasado al ejecutar la prueba.
+            var targetDate = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+            var day = targetDate.DayOfWeek;
 
-    _persistence.GetFiltered<AvailabilityRule>(
-        Arg.Any<System.Linq.Expressions.Expression<
-            Func<AvailabilityRule, bool>>>())
-        .Returns(new List<AvailabilityRule>());
+            var dayNames = new Dictionary<DayOfWeek, string>
+            {
+                { DayOfWeek.Monday, "Lunes" },
+                { DayOfWeek.Tuesday, "Martes" },
+                { DayOfWeek.Wednesday, "Miércoles" },
+                { DayOfWeek.Thursday, "Jueves" },
+                { DayOfWeek.Friday, "Viernes" },
+                { DayOfWeek.Saturday, "Sábado" },
+                { DayOfWeek.Sunday, "Domingo" }
+            };
 
-    _feriadoService.EsFeriado(Arg.Any<DateOnly>())
-        .Returns(false);
+            var request = new AvailabilityModel.Request(
+                doctorId,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new(dayNames[day], new TimeOnly(9, 0), new TimeOnly(11, 0))
+                });
 
-    var slotsGuardados = new List<AvailabilitySlot>();
+            _persistence.GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
-    _persistence.Add(Arg.Any<AvailabilitySlot>())
-    .Returns(call =>
-    {
-        var slot = call.Arg<AvailabilitySlot>()
-            ?? throw new InvalidOperationException("El slot no puede ser nulo.");
+            _persistence.GetFiltered<AvailabilityRule>(
+                Arg.Any<System.Linq.Expressions.Expression<
+                    Func<AvailabilityRule, bool>>>())
+                .Returns(new List<AvailabilityRule>());
 
-        slotsGuardados.Add(slot);
-        return slot;
-    });
+            _feriadoService.EsFeriado(Arg.Any<DateOnly>())
+                .Returns(false);
 
-    var service = CreateService();
+            var reglasGuardadas = new List<AvailabilityRule>();
 
-    // Act
-    var response = await service.CreateAvailability(request);
+            _persistence.Add(Arg.Any<AvailabilityRule>())
+                .Returns<AvailabilityRule>(call =>
+                {
+                    var regla = call.Arg<AvailabilityRule>()
+                        ?? throw new InvalidOperationException(
+                            "La regla no puede ser nula.");
 
-    // Assert
-    Assert.Single(response);
-    Assert.NotEmpty(slotsGuardados);
+                    reglasGuardadas.Add(regla);
+                    return regla;
+                });
 
-    Assert.All(slotsGuardados, slot =>
-    {
-        Assert.Equal(
-            TimeSpan.FromMinutes(30),
-            slot.EndTime.ToTimeSpan() - slot.StartTime.ToTimeSpan());
+            var service = CreateService();
 
-        Assert.True(slot.StartTime >= new TimeOnly(9, 0));
-        Assert.True(slot.EndTime <= new TimeOnly(11, 0));
-    });
-}
+            // Act
+            var response = await service.CreateAvailability(request);
 
+            // Assert
+            Assert.Single(response);
+            Assert.Single(reglasGuardadas);
 
-[Fact]
-public async Task CreateAvailability_CuandoDiaEsFeriado_NoGeneraSlots()
-{
-    // Arrange
-    var doctorId = Guid.NewGuid();
-    var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+            var slotsGenerados = reglasGuardadas.Single().Slots;
 
-    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            Assert.NotEmpty(slotsGenerados);
 
-    var dayNames = new Dictionary<DayOfWeek, string>
-    {
-        { DayOfWeek.Monday, "Lunes" },
-        { DayOfWeek.Tuesday, "Martes" },
-        { DayOfWeek.Wednesday, "Miércoles" },
-        { DayOfWeek.Thursday, "Jueves" },
-        { DayOfWeek.Friday, "Viernes" },
-        { DayOfWeek.Saturday, "Sábado" },
-        { DayOfWeek.Sunday, "Domingo" }
-    };
+            Assert.All(slotsGenerados, slot =>
+            {
+                Assert.Equal(
+                    TimeSpan.FromMinutes(30),
+                    slot.EndTime.ToTimeSpan() - slot.StartTime.ToTimeSpan());
 
-    var request = new AvailabilityModel.Request(
-        doctorId,
-        new List<AvailabilityModel.DayRequest>
+                Assert.True(slot.StartTime >= new TimeOnly(9, 0));
+                Assert.True(slot.EndTime <= new TimeOnly(11, 0));
+            });
+        }
+
+        [Fact]
+        public async Task CreateAvailability_CuandoDiaEsFeriado_NoGeneraSlots()
         {
-            new(dayNames[today.DayOfWeek],
-                new TimeOnly(9, 0),
-                new TimeOnly(12, 0))
-        });
+            // Arrange
+            var doctorId = Guid.NewGuid();
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
 
-    _persistence.GetById<Doctor>(doctorId)
-        .Returns(doctor);
+            var today = DateOnly.FromDateTime(DateTime.Now);
 
-    _persistence.GetFiltered<AvailabilityRule>(
-        Arg.Any<System.Linq.Expressions.Expression<
-            Func<AvailabilityRule, bool>>>())
-        .Returns(new List<AvailabilityRule>());
+            var dayNames = new Dictionary<DayOfWeek, string>
+            {
+                { DayOfWeek.Monday, "Lunes" },
+                { DayOfWeek.Tuesday, "Martes" },
+                { DayOfWeek.Wednesday, "Miércoles" },
+                { DayOfWeek.Thursday, "Jueves" },
+                { DayOfWeek.Friday, "Viernes" },
+                { DayOfWeek.Saturday, "Sábado" },
+                { DayOfWeek.Sunday, "Domingo" }
+            };
 
-    // Simulamos que todas las fechas son feriados.
-    _feriadoService.EsFeriado(Arg.Any<DateOnly>())
-        .Returns(true);
+            var request = new AvailabilityModel.Request(
+                doctorId,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new(
+                        dayNames[today.DayOfWeek],
+                        new TimeOnly(9, 0),
+                        new TimeOnly(12, 0))
+                });
 
-    var service = CreateService();
+            _persistence.GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
-    // Act
-    var response = await service.CreateAvailability(request);
+            _persistence.GetFiltered<AvailabilityRule>(
+                Arg.Any<System.Linq.Expressions.Expression<
+                    Func<AvailabilityRule, bool>>>())
+                .Returns(new List<AvailabilityRule>());
 
-    // Assert
-    Assert.Empty(response);
+            // Simulamos que todas las fechas son feriados.
+            _feriadoService.EsFeriado(Arg.Any<DateOnly>())
+                .Returns(true);
 
-    await _persistence.DidNotReceiveWithAnyArgs()
-        .Add(Arg.Any<AvailabilityRule>());
+            var service = CreateService();
 
-    await _persistence.DidNotReceiveWithAnyArgs()
-        .Add(Arg.Any<AvailabilitySlot>());
-}
+            // Act
+            var response = await service.CreateAvailability(request);
 
+            // Assert
+            Assert.Empty(response);
 
-[Fact]
-public async Task CreateAvailability_CuandoHorarioNoEsMultiploDe30_NoGeneraSlotsFueraDelRango()
-{
-    // Arrange
-    var doctorId = Guid.NewGuid();
-    var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
+            await _persistence.DidNotReceiveWithAnyArgs()
+                .Add(Arg.Any<AvailabilityRule>());
 
-    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            await _persistence.DidNotReceiveWithAnyArgs()
+                .Add(Arg.Any<AvailabilitySlot>());
+        }
 
-    var dayNames = new Dictionary<DayOfWeek, string>
-    {
-        { DayOfWeek.Monday, "Lunes" },
-        { DayOfWeek.Tuesday, "Martes" },
-        { DayOfWeek.Wednesday, "Miércoles" },
-        { DayOfWeek.Thursday, "Jueves" },
-        { DayOfWeek.Friday, "Viernes" },
-        { DayOfWeek.Saturday, "Sábado" },
-        { DayOfWeek.Sunday, "Domingo" }
-    };
-
-    var request = new AvailabilityModel.Request(
-        doctorId,
-        new List<AvailabilityModel.DayRequest>
+        [Fact]
+        public async Task CreateAvailability_CuandoHorarioNoEsMultiploDe30_NoGeneraSlotsFueraDelRango()
         {
-            new(dayNames[today.DayOfWeek],
-                new TimeOnly(9, 0),
-                new TimeOnly(10, 15))
-        });
+            // Arrange
+            var doctorId = Guid.NewGuid();
+            var doctor = new Doctor("Dr. Test", "MP-123", null, doctorId);
 
-    _persistence.GetById<Doctor>(doctorId)
-        .Returns(doctor);
+            // Elegimos un día futuro para que existan turnos disponibles.
+            var targetDate = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+            var day = targetDate.DayOfWeek;
 
-    _persistence.GetFiltered<AvailabilityRule>(
-        Arg.Any<System.Linq.Expressions.Expression<
-            Func<AvailabilityRule, bool>>>())
-        .Returns(new List<AvailabilityRule>());
+            var dayNames = new Dictionary<DayOfWeek, string>
+            {
+                { DayOfWeek.Monday, "Lunes" },
+                { DayOfWeek.Tuesday, "Martes" },
+                { DayOfWeek.Wednesday, "Miércoles" },
+                { DayOfWeek.Thursday, "Jueves" },
+                { DayOfWeek.Friday, "Viernes" },
+                { DayOfWeek.Saturday, "Sábado" },
+                { DayOfWeek.Sunday, "Domingo" }
+            };
 
-    _feriadoService.EsFeriado(Arg.Any<DateOnly>())
-        .Returns(false);
+            var request = new AvailabilityModel.Request(
+                doctorId,
+                new List<AvailabilityModel.DayRequest>
+                {
+                    new(
+                        dayNames[day],
+                        new TimeOnly(9, 0),
+                        new TimeOnly(10, 15))
+                });
 
-    var slotsGuardados = new List<AvailabilitySlot>();
+            _persistence.GetById<Doctor>(doctorId)
+                .Returns(doctor);
 
-    _persistence.Add(Arg.Any<AvailabilitySlot>())
-        .Returns(call =>
-        {
-            var slot = call.Arg<AvailabilitySlot>()
-                ?? throw new InvalidOperationException("Slot nulo.");
+            _persistence.GetFiltered<AvailabilityRule>(
+                Arg.Any<System.Linq.Expressions.Expression<
+                    Func<AvailabilityRule, bool>>>())
+                .Returns(new List<AvailabilityRule>());
 
-            slotsGuardados.Add(slot);
-            return slot;
-        });
+            _feriadoService.EsFeriado(Arg.Any<DateOnly>())
+                .Returns(false);
 
-    var service = CreateService();
+            var reglasGuardadas = new List<AvailabilityRule>();
 
-    // Act
-    await service.CreateAvailability(request);
+            _persistence.Add(Arg.Any<AvailabilityRule>())
+                .Returns<AvailabilityRule>(call =>
+                {
+                    var regla = call.Arg<AvailabilityRule>()
+                        ?? throw new InvalidOperationException(
+                            "La regla no puede ser nula.");
 
-    // Assert
-    Assert.NotEmpty(slotsGuardados);
+                    reglasGuardadas.Add(regla);
+                    return regla;
+                });
 
-    Assert.All(slotsGuardados, slot =>
-    {
-        Assert.True(
-            slot.EndTime <= new TimeOnly(10, 15),
-            $"El slot {slot.StartTime}-{slot.EndTime} excede el horario permitido.");
-    });
-}
+            var service = CreateService();
 
+            // Act
+            await service.CreateAvailability(request);
+
+            // Assert
+            Assert.Single(reglasGuardadas);
+
+            var slotsGenerados = reglasGuardadas.Single().Slots;
+
+            Assert.NotEmpty(slotsGenerados);
+
+            Assert.All(slotsGenerados, slot =>
+            {
+                Assert.True(
+                    slot.EndTime <= new TimeOnly(10, 15),
+                    $"El slot {slot.StartTime}-{slot.EndTime} excede el horario permitido.");
+            });
+        }
     }
 }
